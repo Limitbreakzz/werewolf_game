@@ -73,6 +73,16 @@ export function LobbyView({
   const catalog = room.rolesCatalog || FALLBACK_ROLES;
   const roleConfig = room.settings.roleConfig || {};
   const inviteUrl = `${window.location.origin}/?room=${room.code}`;
+  const balanceScore = ROLE_ORDER.reduce((sum, id) => {
+    const pts = catalog[id]?.points ?? FALLBACK_ROLES[id]?.points ?? 0;
+    return sum + pts * (roleConfig[id] || 0);
+  }, 0);
+  const balanceLabel =
+    Math.abs(balanceScore) <= 2
+      ? 'สมดุล'
+      : balanceScore > 2
+      ? 'ได้เปรียบฝั่งชาวบ้าน'
+      : 'ได้เปรียบฝั่งหมาป่า';
 
   return (
     <section className="lobby-shell">
@@ -252,6 +262,12 @@ export function LobbyView({
               <SlidersHorizontal size={18} strokeWidth={1.75} />
               จัดชุดบทบาทและเวลา
             </h2>
+            <span
+              className={`tag-pill tabular ${Math.abs(balanceScore) <= 2 ? 'sage' : balanceScore > 2 ? 'brass' : 'crimson'}`}
+              title="ระบบแต้มสมดุล Ultimate Werewolf (ใกล้ 0 = สมดุล)"
+            >
+              แต้มสมดุล {balanceScore > 0 ? `+${balanceScore}` : balanceScore} ({balanceLabel})
+            </span>
           </div>
 
           <label className="checkbox-row">
@@ -277,7 +293,9 @@ export function LobbyView({
                     </span>
                     <span>
                       {r.nameTh}{' '}
-                      <span className="subtle" style={{ fontSize: '0.8rem' }}>({r.nameEn})</span>
+                      <span className="subtle" style={{ fontSize: '0.8rem' }}>
+                        ({r.nameEn} {r.points > 0 ? `+${r.points}` : r.points})
+                      </span>
                     </span>
                   </div>
                   <div className="stepper">

@@ -57,7 +57,7 @@ function getPhaseInfo(room) {
     case 'day_vote':
       return { Icon: Scale, title: `กลางวันวันที่ ${day} — โหวตประหาร`, sub: 'เลือกผู้ต้องสงสัยและกดยืนยันคะแนน' };
     case 'hunter_revenge':
-      return { Icon: Crosshair, title: 'นักล่าเล็งปืนนัดสุดท้าย', sub: 'นักล่ากำลังเลือกผู้เล่นที่จะยิงตามไป' };
+      return { Icon: Crosshair, title: 'นายพรานเล็งปืนนัดสุดท้าย', sub: 'นายพรานกำลังเลือกผู้เล่นที่จะยิงตามไป' };
     case 'game_over':
       return {
         Icon: room.winner === 'village' ? Trophy : Flame,
@@ -379,7 +379,7 @@ export function GameView({
             <span>
               {t
                 ? `คืนนี้คุณปกป้อง #${padSeat(t.seatNumber)} ${t.name}`
-                : 'หมอตื่นขึ้น — เลือกปกป้องผู้เล่น 1 คน (ห้ามซ้ำคนเดิมจากคืนก่อน)'}
+                : 'บอดี้การ์ดตื่นขึ้น — เลือกปกป้องผู้เล่น 1 คน (ห้ามซ้ำคนเดิมจากคืนก่อน)'}
             </span>
           </div>
         );
@@ -552,8 +552,8 @@ export function GameView({
           <Crosshair size={18} color="var(--crimson)" />
           <span>
             {room.activeHunterId === me.id
-              ? 'คุณคือนักล่าที่เพิ่งเสียชีวิต แตะเลือกผู้เล่น 1 คนเพื่อยิงตามไปทันที'
-              : `นักล่า "${hunter?.name || ''}" กำลังเล็งปืนนัดสุดท้าย...`}
+              ? 'คุณคือนายพรานที่เพิ่งเสียชีวิต แตะเลือกผู้เล่น 1 คนเพื่อยิงตามไปทันที'
+              : `นายพราน "${hunter?.name || ''}" กำลังเล็งปืนนัดสุดท้าย...`}
           </span>
         </div>
       );
