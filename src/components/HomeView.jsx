@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Moon, Users, Zap, DoorOpen, BookOpen, Upload, Trash2 } from 'lucide-react';
+import { Moon, Users, Zap, DoorOpen, BookOpen, Upload, Trash2, RotateCcw, X } from 'lucide-react';
 import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { compressAvatarFile } from '../lib/imageUtils.js';
 
@@ -10,6 +10,9 @@ export function HomeView({
   setAvatar,
   roomCodeInput,
   setRoomCodeInput,
+  savedSession,
+  onRejoinSaved,
+  onDismissSaved,
   onCreateRoom,
   onQuickSolo,
   onJoinRoom,
@@ -145,6 +148,31 @@ export function HomeView({
 
         {/* Right Decisive Actions */}
         <aside className="panel actions-column">
+          {savedSession?.roomCode ? (
+            <>
+              <div className="action-block" style={{ gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <h2 style={{ color: 'var(--brass)', margin: 0 }}>กลับเข้าเกมที่เล่นค้างไว้</h2>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-ghost"
+                    onClick={onDismissSaved}
+                    title="ล้างห้องเดิม"
+                    aria-label="ล้างห้องเดิม"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <p>คุณมีห้องเดิมรหัส <strong>{savedSession.roomCode}</strong> ที่กำลังเล่นอยู่ แตะเพื่อกลับเข้าที่นั่งและบทบาทเดิมทันที</p>
+                <button type="button" className="btn btn-brass btn-lg btn-full" onClick={onRejoinSaved}>
+                  <RotateCcw size={17} />
+                  กลับเข้าห้อง {savedSession.roomCode}
+                </button>
+              </div>
+              <div className="divider-line" />
+            </>
+          ) : null}
+
           <div className="action-block">
             <h2>เปิดห้องเล่นใหม่</h2>
             <p>สร้างห้องส่วนตัวสำหรับ 4–16 คน เชิญเพื่อนด้วยลิงก์ หรือเติมบอท AI เข้าโต๊ะได้ตามต้องการ</p>

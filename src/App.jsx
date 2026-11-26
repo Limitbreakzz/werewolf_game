@@ -9,9 +9,48 @@ import { GameView } from './components/GameView.jsx';
 import { RulesModal } from './components/RulesModal.jsx';
 
 const SESSION_KEY = 'werewolf_session';
+const SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+function readSavedSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.roomCode || !parsed?.playerId) return null;
+    if (parsed.savedAt && Date.now() - parsed.savedAt > SESSION_TTL_MS) {
+      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedSession(roomCode, playerId) {
+  const payload = { roomCode, playerId, savedAt: Date.now() };
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage errors in private mode
+  }
+  return payload;
+}
+
+function clearSavedSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    // Ignore
+  }
+}
 
 export function App() {
   const [room, setRoom] = useState(null);
+  const [savedSession, setSavedSession] = useState(() => readSavedSession());
   const [timerOffsetMs, setTimerOffsetMs] = useState(0);
   const [playerName, setPlayerName] = useState(() => localStorage.getItem('werewolf_name') || '');
   const [avatar, setAvatar] = useState(() => {
@@ -29,6 +68,7 @@ export function App() {
   const prevPhaseRef = useRef(null);
   const prevNightStepRef = useRef(null);
   const lastRoomVersionRef = useRef({ code: null, version: -1 });
+  const manualLeaveRef = useRef(false);
 
   const pushToast = useCallback((text, type = 'info') => {
     const id = `${Date.now()}_${Math.random()}`;
@@ -39,26 +79,26 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const tryRejoin = () => {
-      const saved = sessionStorage.getItem(SESSION_KEY);
+    const tryRejoin = (force = false) => {
+      if (manualLeaveRef.current && !force) return;
+      const saved = readSavedSession();
       if (!saved) return;
-      try {
-        const { roomCode, playerId } = JSON.parse(saved);
-        if (roomCode && playerId) {
-          socket.emit('rejoin_room', { roomCode, playerId }, (res) => {
-            if (!res?.ok) sessionStorage.removeItem(SESSION_KEY);
-          });
+      lastRoomVersionRef.current = { code: null, version: -1 };
+      socket.emit('rejoin_room', { roomCode: saved.roomCode, playerId: saved.playerId }, (res) => {
+        if (res?.ok) {
+          setSavedSession(writeSavedSession(res.roomCode, res.playerId));
+        } else if (res && res.ok === false) {
+          clearSavedSession();
+          setSavedSession(null);
         }
-      } catch {
-        sessionStorage.removeItem(SESSION_KEY);
-      }
+      });
     };
 
     if (socket.connected) tryRejoin();
-    socket.on('connect', tryRejoin);
+    socket.on('connect', () => tryRejoin());
 
     const requestSync = () => {
-      if (document.visibilityState === 'visible' && socket.connected) {
+      if (document.visibilityState === 'visible' && socket.connected && !manualLeaveRef.current) {
         socket.emit('sync_room', {}, (res) => {
           if (!res?.ok) tryRejoin();
         });
@@ -67,8 +107,10 @@ export function App() {
     document.addEventListener('visibilitychange', requestSync);
     window.addEventListener('focus', requestSync);
     const syncTimer = setInterval(() => {
-      if (socket.connected && sessionStorage.getItem(SESSION_KEY)) {
-        socket.emit('sync_room');
+      if (socket.connected && !manualLeaveRef.current && readSavedSession()) {
+        socket.emit('sync_room', {}, (res) => {
+          if (!res?.ok) tryRejoin();
+        });
       }
     }, 5000);
 
@@ -157,7 +199,10 @@ export function App() {
     };
 
     const onKicked = ({ message }) => {
-      sessionStorage.removeItem(SESSION_KEY);
+      clearSavedSession();
+      setSavedSession(null);
+      manualLeaveRef.current = false;
+      lastRoomVersionRef.current = { code: null, version: -1 };
       prevPhaseRef.current = null;
       prevNightStepRef.current = null;
       document.body.className = 'theme-night';
@@ -173,7 +218,7 @@ export function App() {
       clearInterval(syncTimer);
       document.removeEventListener('visibilitychange', requestSync);
       window.removeEventListener('focus', requestSync);
-      socket.off('connect', tryRejoin);
+      socket.off('connect');
       socket.off('room_state', onRoomState);
       socket.off('chat_message', onChatMessage);
       socket.off('kicked', onKicked);
@@ -189,9 +234,11 @@ export function App() {
 
   const handleCreateRoom = () => {
     soundFX.playClick();
+    manualLeaveRef.current = false;
+    lastRoomVersionRef.current = { code: null, version: -1 };
     socket.emit('create_room', getProfile(), (res) => {
       if (res?.ok) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode: res.roomCode, playerId: res.playerId }));
+        setSavedSession(writeSavedSession(res.roomCode, res.playerId));
         pushToast(`สร้างห้อง ${res.roomCode} สำเร็จ`, 'success');
       } else {
         pushToast(res?.error || 'สร้างห้องไม่สำเร็จ', 'error');
@@ -201,9 +248,11 @@ export function App() {
 
   const handleQuickSolo = () => {
     soundFX.playClick();
+    manualLeaveRef.current = false;
+    lastRoomVersionRef.current = { code: null, version: -1 };
     socket.emit('create_room', getProfile(), (res) => {
       if (!res?.ok) return pushToast(res?.error || 'สร้างห้องไม่สำเร็จ', 'error');
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode: res.roomCode, playerId: res.playerId }));
+      setSavedSession(writeSavedSession(res.roomCode, res.playerId));
       let added = 0;
       const addNext = () => {
         if (added >= 6) {
@@ -223,14 +272,45 @@ export function App() {
     soundFX.playClick();
     const code = roomCodeInput.trim().toUpperCase();
     if (code.length < 4) return pushToast('กรุณากรอกรหัสห้อง 4 ตัวอักษร', 'error');
-    socket.emit('join_room', { ...getProfile(), roomCode: code }, (res) => {
+    manualLeaveRef.current = false;
+    lastRoomVersionRef.current = { code: null, version: -1 };
+    const saved = readSavedSession();
+    const savedPlayerId = saved?.roomCode === code ? saved.playerId : undefined;
+    socket.emit('join_room', { ...getProfile(), roomCode: code, savedPlayerId }, (res) => {
       if (res?.ok) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode: res.roomCode, playerId: res.playerId }));
-        pushToast(`เข้าร่วมห้อง ${res.roomCode} สำเร็จ`, 'success');
+        setSavedSession(writeSavedSession(res.roomCode, res.playerId));
+        pushToast(
+          res.rejoined ? `กลับเข้าสู่เกมในห้อง ${res.roomCode} สำเร็จ` : `เข้าร่วมห้อง ${res.roomCode} สำเร็จ`,
+          'success'
+        );
       } else {
         pushToast(res?.error || 'เข้าร่วมห้องไม่สำเร็จ', 'error');
       }
     });
+  };
+
+  const handleRejoinSaved = () => {
+    const saved = savedSession || readSavedSession();
+    if (!saved?.roomCode || !saved?.playerId) return;
+    soundFX.playClick();
+    manualLeaveRef.current = false;
+    lastRoomVersionRef.current = { code: null, version: -1 };
+    socket.emit('rejoin_room', { roomCode: saved.roomCode, playerId: saved.playerId }, (res) => {
+      if (res?.ok) {
+        setSavedSession(writeSavedSession(res.roomCode, res.playerId));
+        pushToast(`กลับเข้าสู่ห้อง ${res.roomCode} สำเร็จ`, 'success');
+      } else {
+        clearSavedSession();
+        setSavedSession(null);
+        pushToast(res?.error || 'ห้องหมดอายุหรือจบเกมไปแล้ว', 'error');
+      }
+    });
+  };
+
+  const handleDismissSaved = () => {
+    soundFX.playClick();
+    clearSavedSession();
+    setSavedSession(null);
   };
 
   const handleCopyInvite = () => {
@@ -244,8 +324,18 @@ export function App() {
 
   const handleLeave = () => {
     soundFX.playClick();
+    const isLobby = room?.phase === 'lobby' || room?.phase === 'game_over';
     socket.emit('leave_room', {}, () => {
-      sessionStorage.removeItem(SESSION_KEY);
+      if (isLobby) {
+        clearSavedSession();
+        setSavedSession(null);
+        manualLeaveRef.current = false;
+      } else {
+        // Keep session so player can jump right back into the ongoing game with 1 click
+        manualLeaveRef.current = true;
+        setSavedSession(readSavedSession());
+      }
+      lastRoomVersionRef.current = { code: null, version: -1 };
       prevPhaseRef.current = null;
       prevNightStepRef.current = null;
       document.body.className = 'theme-night';
@@ -315,6 +405,9 @@ export function App() {
           }}
           roomCodeInput={roomCodeInput}
           setRoomCodeInput={setRoomCodeInput}
+          savedSession={savedSession}
+          onRejoinSaved={handleRejoinSaved}
+          onDismissSaved={handleDismissSaved}
           onCreateRoom={handleCreateRoom}
           onQuickSolo={handleQuickSolo}
           onJoinRoom={handleJoinRoom}
