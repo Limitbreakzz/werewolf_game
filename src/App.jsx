@@ -28,6 +28,7 @@ export function App() {
 
   const prevPhaseRef = useRef(null);
   const prevNightStepRef = useRef(null);
+  const lastRoomVersionRef = useRef({ code: null, version: -1 });
 
   const pushToast = useCallback((text, type = 'info') => {
     const id = `${Date.now()}_${Math.random()}`;
@@ -56,7 +57,31 @@ export function App() {
     if (socket.connected) tryRejoin();
     socket.on('connect', tryRejoin);
 
+    const requestSync = () => {
+      if (document.visibilityState === 'visible' && socket.connected) {
+        socket.emit('sync_room', {}, (res) => {
+          if (!res?.ok) tryRejoin();
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', requestSync);
+    window.addEventListener('focus', requestSync);
+    const syncTimer = setInterval(() => {
+      if (socket.connected && sessionStorage.getItem(SESSION_KEY)) {
+        socket.emit('sync_room');
+      }
+    }, 5000);
+
     const onRoomState = (nextRoom) => {
+      // Ignore out-of-order stale snapshots for the same room
+      if (
+        lastRoomVersionRef.current.code === nextRoom.code &&
+        typeof nextRoom.stateVersion === 'number' &&
+        nextRoom.stateVersion < lastRoomVersionRef.current.version
+      ) {
+        return;
+      }
+      lastRoomVersionRef.current = { code: nextRoom.code, version: nextRoom.stateVersion || 0 };
       const prevPhase = prevPhaseRef.current;
       const prevStep = prevNightStepRef.current;
       const isHostNarrator =
@@ -139,6 +164,9 @@ export function App() {
     socket.on('kicked', onKicked);
 
     return () => {
+      clearInterval(syncTimer);
+      document.removeEventListener('visibilitychange', requestSync);
+      window.removeEventListener('focus', requestSync);
       socket.off('connect', tryRejoin);
       socket.off('room_state', onRoomState);
       socket.off('chat_message', onChatMessage);
