@@ -322,15 +322,16 @@ body {
 
 .home-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 28px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 24px;
+  align-items: stretch;
 }
 
 .hero-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .hero-title {
@@ -391,7 +392,9 @@ body {
   padding: 26px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  justify-content: space-between;
+  gap: 20px;
+  height: 100%;
 }
 
 .action-block {
