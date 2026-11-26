@@ -256,6 +256,12 @@ export function App() {
           setAvatar={(av) => {
             soundFX.playClick();
             setAvatar(av);
+            try {
+              if (av) localStorage.setItem('werewolf_avatar', av);
+              else localStorage.removeItem('werewolf_avatar');
+            } catch {
+              // Ignore storage quota / private mode errors
+            }
           }}
           roomCodeInput={roomCodeInput}
           setRoomCodeInput={setRoomCodeInput}
