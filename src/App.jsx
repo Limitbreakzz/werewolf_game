@@ -143,6 +143,8 @@ export function App() {
             const s = nextRoom.lastVoteSummary;
             if (s.eliminatedName) {
               pushToast(`ผลตัดสิน: ${s.eliminatedName} ถูกประหารออกจากหมู่บ้าน`, 'error');
+            } else if (s.reason === 'prince_saved' && s.sparedName) {
+              pushToast(`เจ้าชาย ${s.sparedName} เผยตัวตนและรอดพ้นจากการประหาร!`, 'success');
             } else if (s.reason === 'spared' && s.sparedName) {
               pushToast(`ยกเลิกโหวต! ${s.sparedName} รอดชีวิต (${s.executeVotes} ประหาร / ${s.spareVotes} ปล่อยตัว)`, 'success');
             } else if (s.reason === 'tie') {
