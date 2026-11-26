@@ -115,17 +115,30 @@ export function isPackWolf(roleId) {
 
 const ILLUSTRATED_ROLES = new Set([
   'werewolf',
+  'lone_wolf',
   'wolf_cub',
+  'alpha_wolf',
   'minion',
   'sorcerer',
+  'hoodlum',
+  'cursed',
   'seer',
+  'spellcaster',
+  'cupid',
   'doctor',
+  'aura_seer',
   'witch',
   'hunter',
   'mayor',
   'lycan',
   'villager',
   'tanner',
+  'vampire',
+  'cult_leader',
+  'revealer',
+  'mentalist',
+  'huntress',
+  'mystic_seer',
 ]);
 
 export const FALLBACK_ROLES = {
