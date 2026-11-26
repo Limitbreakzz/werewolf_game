@@ -54,8 +54,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'มนุษย์หมาป่า',
     nameEn: 'Werewolf',
     team: 'werewolf',
-    points: -6,
     color: '#C83232',
+    shortDesc: 'ล่าชาวบ้านคืนละ 1 คนร่วมกับฝูงหมาป่า',
     description: 'ทุกคืนร่วมกับฝูงมนุษย์หมาป่าเลือกเหยื่อ 1 คนเพื่อกำจัด และแฝงตัวในหมู่บ้านตอนกลางวัน',
   },
   wolf_cub: {
@@ -63,8 +63,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'ลูกมนุษย์หมาป่า',
     nameEn: 'Wolf Cub',
     team: 'werewolf',
-    points: -8,
     color: '#D94646',
+    shortDesc: 'หากตาย คืนถัดไปฝูงหมาป่าล่าได้ 2 คน',
     description: 'ตื่นพร้อมฝูงมนุษย์หมาป่าทุกคืน หากลูกมนุษย์หมาป่าถูกกำจัด คืนถัดไปฝูงหมาป่าจะล่าได้ 2 คน',
   },
   minion: {
@@ -72,8 +72,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'สมุนหมาป่า',
     nameEn: 'Minion',
     team: 'werewolf',
-    points: -6,
     color: '#B84A4A',
+    shortDesc: 'รู้ตัวหมาป่าแต่ไม่ตื่นล่า ส่องเห็นเป็นชาวบ้าน',
     description: 'อยู่ฝ่ายมนุษย์หมาป่า รู้ว่าใครคือหมาป่าตั้งแต่เริ่มเกมแต่ไม่ตื่นล่า (เทพพยากรณ์ส่องเห็นเป็นชาวบ้าน)',
   },
   sorcerer: {
@@ -81,8 +81,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'จอมเวทมืด',
     nameEn: 'Sorcerer',
     team: 'werewolf',
-    points: -3,
     color: '#9333EA',
+    shortDesc: 'ส่องหาว่าใครคือเทพพยากรณ์ทุกคืน',
     description: 'อยู่ฝ่ายมนุษย์หมาป่า ทุกคืนส่องผู้เล่น 1 คนเพื่อหาว่าใครคือเทพพยากรณ์ (เทพพยากรณ์ส่องเห็นเป็นชาวบ้าน)',
   },
   seer: {
@@ -90,8 +90,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'เทพพยากรณ์',
     nameEn: 'Seer',
     team: 'village',
-    points: 7,
     color: '#A87CE8',
+    shortDesc: 'ส่องดูฝ่ายผู้เล่นได้คืนละ 1 คน',
     description: 'ทุกคืนเลือกตรวจสอบผู้เล่น 1 คน เพื่อรู้ความจริงว่าเป็นฝ่ายมนุษย์หมาป่าหรือฝ่ายชาวบ้าน',
   },
   doctor: {
@@ -99,8 +99,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'บอดี้การ์ด',
     nameEn: 'Bodyguard',
     team: 'village',
-    points: 3,
     color: '#4DA6D6',
+    shortDesc: 'ปกป้องผู้เล่น 1 คนไม่ให้ถูกหมาป่าล่า',
     description: 'ทุกคืนเลือกปกป้องผู้เล่น 1 คนจากการโจมตีของมนุษย์หมาป่า (ห้ามปกป้องคนเดิม 2 คืนติดกัน)',
   },
   witch: {
@@ -108,8 +108,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'แม่มด',
     nameEn: 'Witch',
     team: 'village',
-    points: 4,
     color: '#2E9E72',
+    shortDesc: 'มียาชุบชีวิต 1 ขวด และยาพิษ 1 ขวด',
     description: 'มียาชุบชีวิต 1 ขวด (ช่วยเหยื่อมนุษย์หมาป่า) และยาพิษ 1 ขวด (กำจัดผู้เล่น 1 คน) ใช้ได้ขวดละครั้งต่อเกม',
   },
   hunter: {
@@ -117,8 +117,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'นายพราน',
     nameEn: 'Hunter',
     team: 'village',
-    points: 3,
     color: '#D6A354',
+    shortDesc: 'เมื่อตาย สามารถยิงผู้เล่น 1 คนตามไปได้',
     description: 'หากถูกกำจัดไม่ว่ากลางวันหรือกลางคืน สามารถเลือกยิงผู้เล่น 1 คนให้ตายตามไปได้ทันที',
   },
   mayor: {
@@ -126,8 +126,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'นายกเทศมนตรี',
     nameEn: 'Mayor',
     team: 'village',
-    points: 2,
     color: '#E0B45A',
+    shortDesc: 'คะแนนโหวตตอนกลางวันนับเป็น 2 เสียง',
     description: 'ผู้นำหมู่บ้าน คะแนนโหวตประหารในตอนกลางวันของนายกเทศมนตรีนับเป็น 2 คะแนน',
   },
   lycan: {
@@ -135,8 +135,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'ไลแคน',
     nameEn: 'Lycan',
     team: 'village',
-    points: -1,
     color: '#8C9AB0',
+    shortDesc: 'ฝ่ายชาวบ้าน แต่เทพพยากรณ์ส่องเห็นเป็นหมาป่า',
     description: 'อยู่ฝ่ายชาวบ้าน แต่ต้องคำสาปทำให้เทพพยากรณ์ส่องเห็นเป็นฝ่ายมนุษย์หมาป่า',
   },
   villager: {
@@ -144,8 +144,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'ชาวบ้าน',
     nameEn: 'Villager',
     team: 'village',
-    points: 1,
     color: '#A5A095',
+    shortDesc: 'ไม่มีพลังกลางคืน ช่วยจับผิดและโหวตหมาป่า',
     description: 'ไม่มีพลังพิเศษตอนกลางคืน ใช้การสังเกต คำพูด และตรรกะเพื่อจับผิดมนุษย์หมาป่าตอนกลางวัน',
   },
   tanner: {
@@ -153,8 +153,8 @@ export const FALLBACK_ROLES = {
     nameTh: 'คนคลั่ง',
     nameEn: 'Tanner',
     team: 'independent',
-    points: 0,
     color: '#D97742',
+    shortDesc: 'ฝ่ายอิสระ ชนะคนเดียวหากถูกโหวตออกตอนกลางวัน',
     description: 'ฝ่ายอิสระ ชนะคนเดียวทันทีหากถูกโหวตประหารตอนกลางวัน (ถ้าตายตอนกลางคืนจะแพ้)',
   },
 };

@@ -272,13 +272,18 @@ export function LobbyView({
               return (
                 <div className="deck-row" key={roleId}>
                   <div className="deck-role-label">
-                    <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex' }}>
+                    <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
                       <RoleIcon roleId={roleId} size={16} />
                     </span>
-                    <span>
-                      {r.nameTh}{' '}
-                      <span className="subtle" style={{ fontSize: '0.8rem' }}>({r.nameEn})</span>
-                    </span>
+                    <div className="deck-role-text">
+                      <div className="deck-role-name">
+                        {r.nameTh}{' '}
+                        <span className="subtle" style={{ fontSize: '0.78rem' }}>({r.nameEn})</span>
+                      </div>
+                      <div className="deck-role-desc">
+                        {r.shortDesc || FALLBACK_ROLES[roleId]?.shortDesc || r.description}
+                      </div>
+                    </div>
                   </div>
                   <div className="stepper">
                     <button

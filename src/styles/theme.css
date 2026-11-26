@@ -622,12 +622,29 @@ body {
 .deck-role-label {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   font-size: 0.9rem;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.deck-role-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.deck-role-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.deck-role-desc {
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  line-height: 1.35;
+  margin-top: 2px;
 }
 
 .stepper {
