@@ -29,7 +29,7 @@ import {
   ShieldCheck,
   Vibrate,
 } from 'lucide-react';
-import { FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
+import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon } from '../lib/roleIcons.jsx';
 import { vibrateDevice } from '../lib/feedback.js';
 import { PhaseTimer } from './PhaseTimer.jsx';
 
@@ -629,10 +629,13 @@ export function GameView({
               <p className="overlay-copy">เมื่อคืนที่ผ่านมาไม่มีใครเสียชีวิต ทุกคนลืมตาและเริ่มพูดคุยได้เลย</p>
             ) : (
               <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '14px 0' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '14px 0', alignItems: 'center' }}>
                   {deaths.map((d) => (
-                    <div key={d.playerId} style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                      {d.avatar} {d.name}
+                    <div key={d.playerId} className="dawn-victim-row">
+                      <span className="seat-avatar-badge">
+                        <PlayerAvatar avatarId={d.avatar} size={17} />
+                      </span>
+                      <span>{d.name}</span>
                     </div>
                   ))}
                 </div>
@@ -817,13 +820,13 @@ export function GameView({
 
                       {wolfCounts[p.id] ? (
                         <span className="seat-wolf-counter tabular">
-                          <Flame size={12} />
+                          <WolfCrestIcon size={12} />
                           {wolfCounts[p.id]}
                         </span>
                       ) : null}
 
                       <div className="seat-figure">
-                        <span aria-hidden="true">{p.avatar}</span>
+                        <PlayerAvatar avatarId={p.avatar} size={24} />
                         {!p.alive ? (
                           <div className="seat-dead-mark" aria-label="เสียชีวิตแล้ว">
                             <Skull size={22} />
@@ -993,7 +996,8 @@ export function GameView({
                     key={m.id}
                   >
                     <span className="chat-author">
-                      {m.senderAvatar} {m.senderName}:
+                      <PlayerAvatar avatarId={m.senderAvatar} size={13} className="chat-author-icon" />
+                      {m.senderName}:
                     </span>
                     <span>{m.text}</span>
                   </div>

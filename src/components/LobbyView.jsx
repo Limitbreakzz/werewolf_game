@@ -17,7 +17,7 @@ import {
   Volume2,
   ShieldCheck,
 } from 'lucide-react';
-import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
+import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { QrCodeBox } from './QrCodeBox.jsx';
 
 const DISCUSS_PRESETS = [
@@ -155,7 +155,9 @@ export function LobbyView({
                 const isModHost = isManualMod && p.isHost;
                 return (
                   <div className={`roster-seat ${isMe ? 'is-me' : ''}`} key={p.id}>
-                    <span className="seat-avatar" aria-hidden="true">{p.avatar}</span>
+                    <span className="seat-avatar-badge" aria-hidden="true">
+                      <PlayerAvatar avatarId={p.avatar} size={18} />
+                    </span>
                     <div className="seat-meta">
                       <div className="seat-name">
                         {isModHost ? (

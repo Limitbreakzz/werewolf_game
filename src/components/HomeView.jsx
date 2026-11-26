@@ -1,6 +1,6 @@
 import React from 'react';
 import { Moon, Users, Zap, DoorOpen, BookOpen } from 'lucide-react';
-import { AVATARS, ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
+import { AVATAR_CRESTS, ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
 
 export function HomeView({
   playerName,
@@ -71,18 +71,20 @@ export function HomeView({
             </div>
 
             <div>
-              <span className="field-label">สัญลักษณ์ประจำตัว</span>
-              <div className="avatar-grid" role="radiogroup" aria-label="เลือกอวตาร">
-                {AVATARS.map((av) => (
+              <span className="field-label">ตราสัญลักษณ์ประจำตัว</span>
+              <div className="avatar-grid" role="radiogroup" aria-label="เลือกตราสัญลักษณ์ประจำตัว">
+                {AVATAR_CRESTS.map(({ id, label, Icon }) => (
                   <button
-                    key={av}
+                    key={id}
                     type="button"
                     role="radio"
-                    aria-checked={avatar === av}
-                    className={`avatar-btn ${avatar === av ? 'selected' : ''}`}
-                    onClick={() => setAvatar(av)}
+                    aria-checked={avatar === id}
+                    aria-label={label}
+                    title={label}
+                    className={`avatar-btn ${avatar === id ? 'selected' : ''}`}
+                    onClick={() => setAvatar(id)}
                   >
-                    {av}
+                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 ))}
               </div>

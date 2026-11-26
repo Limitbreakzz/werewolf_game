@@ -367,22 +367,24 @@ body {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface-inset);
-  font-size: 1.35rem;
+  color: var(--ink-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.12s;
 }
 
 .avatar-btn:hover {
   border-color: var(--border-strong);
+  color: var(--ink);
   transform: translateY(-1px);
 }
 
 .avatar-btn.selected {
   border-color: var(--brass);
   background: var(--brass-soft);
+  color: var(--brass);
 }
 
 .actions-column {
@@ -862,17 +864,48 @@ body {
   border-style: dashed;
 }
 
+.seat-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  color: var(--brass);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dawn-victim-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.chat-author-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 5px;
+}
+
 .seat-figure {
   position: relative;
   width: 56px;
   height: 56px;
   border-radius: 50%;
   background: var(--surface-inset);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
+  color: var(--brass);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.9rem;
 }
 
 .seat-dead-mark {
