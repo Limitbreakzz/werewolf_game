@@ -89,19 +89,21 @@ export function App() {
       const visibleStep = nextRoom.privateData?.visibleNightStep || null;
 
       if (prevPhase !== nextRoom.phase) {
-        const isDay = ['dawn', 'day_discuss', 'day_vote', 'game_over'].includes(nextRoom.phase);
+        const isDay = ['dawn', 'day_discuss', 'day_vote', 'day_defense', 'day_verdict', 'game_over'].includes(nextRoom.phase);
         document.body.className = isDay ? 'theme-day' : 'theme-night';
 
         if (nextRoom.phase === 'night') {
           soundFX.playNight();
-          if (prevPhase === 'day_vote' && nextRoom.lastVoteSummary) {
+          if ((prevPhase === 'day_vote' || prevPhase === 'day_verdict') && nextRoom.lastVoteSummary) {
             const s = nextRoom.lastVoteSummary;
             if (s.eliminatedName) {
-              pushToast(`ผลโหวต: ${s.eliminatedName} ถูกโหวตออกจากหมู่บ้าน`, 'error');
+              pushToast(`ผลตัดสิน: ${s.eliminatedName} ถูกประหารออกจากหมู่บ้าน`, 'error');
+            } else if (s.reason === 'spared' && s.sparedName) {
+              pushToast(`ยกเลิกโหวต! ${s.sparedName} รอดชีวิต (${s.executeVotes} ประหาร / ${s.spareVotes} ปล่อยตัว)`, 'success');
             } else if (s.reason === 'tie') {
-              pushToast('ผลโหวตเสมอกัน วันนี้ไม่มีใครถูกโหวตออก', 'info');
+              pushToast('ผลโหวตเสมอกัน วันนี้ไม่มีใครถูกเสนอชื่อ', 'info');
             } else {
-              pushToast('ผลโหวต: งดออกเสียง วันนี้ไม่มีใครถูกโหวตออก', 'info');
+              pushToast('ผลโหวต: งดออกเสียง วันนี้ไม่มีใครถูกเสนอชื่อ', 'info');
             }
           }
           if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.night_start, { interrupt: true, muted: soundFX.muted });
@@ -111,6 +113,10 @@ export function App() {
           if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.dawn, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'day_vote') {
           if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.day_vote, { interrupt: true, muted: soundFX.muted });
+        } else if (nextRoom.phase === 'day_defense') {
+          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.day_defense, { interrupt: true, muted: soundFX.muted });
+        } else if (nextRoom.phase === 'day_verdict') {
+          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.day_verdict, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'game_over') {
           soundFX.playWin(nextRoom.winner === 'village');
         }
@@ -446,6 +452,30 @@ export function App() {
               if (!res?.ok) {
                 pushToast(res?.error || 'ส่งคะแนนโหวตไม่สำเร็จ กรุณาลองอีกครั้ง', 'error');
               }
+            });
+          }}
+          onEndDefense={() => {
+            soundFX.playClick();
+            socket.emit('end_defense', {}, (res) => {
+              if (!res?.ok && res?.error) pushToast(res.error, 'error');
+            });
+          }}
+          onVerdictVote={(choice) => {
+            soundFX.playClick();
+            if (!socket.connected) {
+              pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
+              return;
+            }
+            setRoom((curr) =>
+              curr
+                ? {
+                    ...curr,
+                    verdictVotes: { ...(curr.verdictVotes || {}), [curr.myId]: choice },
+                  }
+                : curr
+            );
+            socket.emit('verdict_vote', { choice }, (res) => {
+              if (!res?.ok && res?.error) pushToast(res.error, 'error');
             });
           }}
           onHunterShoot={(targetId) => {

@@ -25,12 +25,16 @@ export function PhaseTimer({ phase, phaseEndsAt, timerOffsetMs, settings }) {
   const approxTotal =
     phase === 'day_discuss'
       ? settings?.discussSeconds || 75
-      : phase === 'night_actions'
-      ? settings?.nightSeconds || 30
+      : phase === 'night'
+      ? settings?.nightStepSeconds || 20
       : phase === 'day_vote'
-      ? settings?.voteSeconds || 30
-      : phase === 'night_witch' || phase === 'hunter_revenge'
-      ? 18
+      ? settings?.voteSeconds || 35
+      : phase === 'day_defense'
+      ? settings?.defenseSeconds || 30
+      : phase === 'day_verdict'
+      ? settings?.verdictSeconds || 20
+      : phase === 'hunter_revenge'
+      ? 20
       : 6;
 
   const pct = Math.max(0, Math.min(100, (remainingMs / (approxTotal * 1000)) * 100));

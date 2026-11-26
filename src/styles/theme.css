@@ -876,6 +876,15 @@ body {
   color: var(--ink);
 }
 
+.trial-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 .wolf-vote-banner {
   display: flex;
   flex-direction: column;

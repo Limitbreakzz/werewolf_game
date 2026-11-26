@@ -55,7 +55,11 @@ function getPhaseInfo(room) {
     case 'day_discuss':
       return { Icon: Sun, title: `กลางวันวันที่ ${day} — สนทนาหน้าโต๊ะ`, sub: 'พูดคุย ถกเถียง และจับพิรุธผู้ต้องสงสัย' };
     case 'day_vote':
-      return { Icon: Scale, title: `กลางวันวันที่ ${day} — โหวตประหาร`, sub: 'เลือกผู้ต้องสงสัยและกดยืนยันคะแนน' };
+      return { Icon: Scale, title: `กลางวันวันที่ ${day} — โหวตเสนอชื่อ`, sub: 'เลือกผู้ต้องสงสัยเพื่อนำขึ้นแก้ตัว' };
+    case 'day_defense':
+      return { Icon: MessageSquare, title: `กลางวันวันที่ ${day} — ช่วงแก้ตัว`, sub: 'รับฟังคำแก้ตัวของผู้ถูกเสนอชื่อก่อนตัดสิน' };
+    case 'day_verdict':
+      return { Icon: Scale, title: `กลางวันวันที่ ${day} — โหวตตัดสิน`, sub: 'เลือกว่าจะประหารหรือปล่อยตัว (ยกเลิกโหวต)' };
     case 'hunter_revenge':
       return { Icon: Crosshair, title: 'นายพรานเล็งปืนนัดสุดท้าย', sub: 'นายพรานกำลังเลือกผู้เล่นที่จะยิงตามไป' };
     case 'game_over':
@@ -84,6 +88,8 @@ export function GameView({
   onNightAction,
   onDayReady,
   onDayVote,
+  onEndDefense,
+  onVerdictVote,
   onHunterShoot,
   onSendChat,
   onModControl,
@@ -302,7 +308,11 @@ export function GameView({
                   : room.phase === 'day_discuss'
                   ? 'เริ่มโหวตประหาร'
                   : room.phase === 'day_vote'
-                  ? 'สรุปผลโหวต'
+                  ? 'สรุปผลเสนอชื่อ'
+                  : room.phase === 'day_defense'
+                  ? 'เริ่มโหวตตัดสิน'
+                  : room.phase === 'day_verdict'
+                  ? 'สรุปผลประหาร/ปล่อยตัว'
                   : 'ขั้นตอนถัดไป'}
               </button>
             ) : (
@@ -592,6 +602,76 @@ export function GameView({
             </button>
           </div>
         </>
+      );
+    }
+
+    if (room.phase === 'day_defense') {
+      const accused = gamePlayers.find((p) => p.id === room.accusedId);
+      const isAccused = me.id === room.accusedId;
+      return (
+        <div className="trial-banner">
+          <div className="action-strip-msg">
+            <span className="seat-avatar-badge">
+              <PlayerAvatar avatarId={accused?.avatar} size={18} />
+            </span>
+            <span>
+              {isAccused
+                ? 'คุณถูกโหวตเสนอชื่อ! พูดแก้ตัวเพื่อโน้มน้าวให้ทุกคนปล่อยตัว (ยกเลิกโหวต)'
+                : `#${padSeat(accused?.seatNumber)} ${accused?.name || ''} ถูกโหวตเสนอชื่อสูงสุด — กำลังพูดแก้ตัว...`}
+            </span>
+          </div>
+          {isAccused || isHost ? (
+            <div className="action-strip-btns">
+              <button type="button" className="btn btn-sm btn-brass" onClick={onEndDefense}>
+                <SkipForward size={15} />
+                จบการแก้ตัว → โหวตตัดสิน
+              </button>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
+    if (room.phase === 'day_verdict') {
+      const accused = gamePlayers.find((p) => p.id === room.accusedId);
+      const isAccused = me.id === room.accusedId;
+      const myVerdict = room.verdictVotes?.[me.id];
+      const execCount = Object.values(room.verdictVotes || {}).filter((v) => v === 'execute').length;
+      const spareCount = Object.values(room.verdictVotes || {}).filter((v) => v === 'spare').length;
+
+      return (
+        <div className="trial-banner">
+          <div className="action-strip-msg">
+            <span className="seat-avatar-badge">
+              <PlayerAvatar avatarId={accused?.avatar} size={18} />
+            </span>
+            <span>
+              {isAccused
+                ? `กำลังรอผลโหวตตัดสินชะตาของคุณ (ประหาร ${execCount} / ปล่อยตัว ${spareCount})`
+                : `ตัดสินชะตา #${padSeat(accused?.seatNumber)} ${accused?.name || ''} — ประหาร หรือ ปล่อยตัว (ยกเลิกโหวต)?`}
+            </span>
+          </div>
+          {!isAccused ? (
+            <div className="action-strip-btns">
+              <button
+                type="button"
+                className={`btn btn-sm ${myVerdict === 'execute' ? 'btn-crimson' : 'btn-surface'}`}
+                onClick={() => onVerdictVote('execute')}
+              >
+                <Skull size={15} />
+                {myVerdict === 'execute' ? `โหวตประหารแล้ว (${execCount})` : `ประหาร (${execCount})`}
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${myVerdict === 'spare' ? 'btn-sage' : 'btn-surface'}`}
+                onClick={() => onVerdictVote('spare')}
+              >
+                <Check size={15} />
+                {myVerdict === 'spare' ? `ยกเลิกโหวตแล้ว (${spareCount})` : `ปล่อยตัว / ยกเลิกโหวต (${spareCount})`}
+              </button>
+            </div>
+          ) : null}
+        </div>
       );
     }
 
