@@ -29,7 +29,7 @@ import {
   ShieldCheck,
   Vibrate,
 } from 'lucide-react';
-import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon, getRoleImage } from '../lib/roleIcons.jsx';
+import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon, getRoleImage, isPackWolf } from '../lib/roleIcons.jsx';
 import { vibrateDevice } from '../lib/feedback.js';
 import { PhaseTimer } from './PhaseTimer.jsx';
 
@@ -60,8 +60,13 @@ function getPhaseInfo(room) {
       return { Icon: Crosshair, title: 'นายพรานเล็งปืนนัดสุดท้าย', sub: 'นายพรานกำลังเลือกผู้เล่นที่จะยิงตามไป' };
     case 'game_over':
       return {
-        Icon: room.winner === 'village' ? Trophy : Flame,
-        title: room.winner === 'village' ? 'ฝ่ายชาวบ้านชนะ' : 'ฝ่ายหมาป่าชนะ',
+        Icon: room.winner === 'village' ? Trophy : room.winner === 'tanner' ? Skull : Flame,
+        title:
+          room.winner === 'village'
+            ? 'ฝ่ายชาวบ้านชนะ'
+            : room.winner === 'tanner'
+            ? `คนคลั่ง (${room.winnerPlayerName || 'Tanner'}) ชนะคนเดียว!`
+            : 'ฝ่ายมนุษย์หมาป่าชนะ',
         sub: 'จบเกม — เปิดเผยบทบาททุกคน',
       };
     default:
@@ -104,7 +109,7 @@ export function GameView({
   const gamePlayers = useMemo(() => room.players.filter((p) => !p.isModerator), [room.players]);
   const aliveCount = useMemo(() => gamePlayers.filter((p) => p.alive).length, [gamePlayers]);
 
-  const canSeeWolf = me?.role === 'werewolf' || isMod || (!me?.alive && !isMod) || room.phase === 'game_over';
+  const canSeeWolf = isPackWolf(me?.role) || isMod || (!me?.alive && !isMod) || room.phase === 'game_over';
   const canSeeGhost = isMod || !me?.alive || room.phase === 'game_over';
 
   // Vibrate phone when it becomes your Night Turn!
@@ -172,7 +177,8 @@ export function GameView({
     if (!me.alive) return false;
 
     if (room.phase === 'night' && isMyNightTurn) {
-      if (me.role === 'werewolf') return target.role !== 'werewolf';
+      if (isPackWolf(me.role)) return !isPackWolf(target.role);
+      if (me.role === 'sorcerer') return !room.privateData?.sorcererInspectedTonight && target.id !== me.id;
       if (me.role === 'seer') return !room.privateData?.seerInspectedTonight && target.id !== me.id;
       if (me.role === 'doctor') return room.privateData?.doctorLastProtected !== target.id;
       if (me.role === 'witch') {
@@ -188,7 +194,8 @@ export function GameView({
   const handleSeatClick = (target) => {
     if (!canTarget(target)) return;
     if (room.phase === 'night' && isMyNightTurn) {
-      if (me.role === 'werewolf') onNightAction({ type: 'wolf_vote', targetId: target.id });
+      if (isPackWolf(me.role)) onNightAction({ type: 'wolf_vote', targetId: target.id });
+      else if (me.role === 'sorcerer') onNightAction({ type: 'sorcerer_inspect', targetId: target.id });
       else if (me.role === 'seer') onNightAction({ type: 'seer_inspect', targetId: target.id });
       else if (me.role === 'doctor') onNightAction({ type: 'doctor_protect', targetId: target.id });
       else if (me.role === 'witch') {
@@ -342,16 +349,31 @@ export function GameView({
     }
 
     if (room.phase === 'night' && isMyNightTurn) {
-      if (me.role === 'werewolf') {
+      if (isPackWolf(me.role)) {
         const myVote = room.privateData?.wolfVotes?.[me.id];
         const target = gamePlayers.find((p) => p.id === myVote);
+        const dbl = room.privateData?.doubleKillTonight ? ' (คืนนี้ล่าได้ 2 คน!)' : '';
         return (
           <div className="action-strip-msg">
-            <Flame size={18} color="var(--crimson)" />
+            <WolfCrestIcon size={18} />
             <span>
               {target
-                ? `หมาป่าเลือกเหยื่อ #${padSeat(target.seatNumber)} ${target.name} แล้ว (คลิกคนอื่นเพื่อเปลี่ยนได้)`
-                : 'หมาป่าตื่นขึ้น — เลือกผู้เล่นที่ต้องการกำจัดในคืนนี้'}
+                ? `มนุษย์หมาป่าเลือกเหยื่อ #${padSeat(target.seatNumber)} ${target.name} แล้ว${dbl}`
+                : `มนุษย์หมาป่าตื่นขึ้น — เลือกผู้เล่นที่ต้องการกำจัดในคืนนี้${dbl}`}
+            </span>
+          </div>
+        );
+      }
+      if (me.role === 'sorcerer') {
+        const res = room.privateData?.sorcererInspectedTonight;
+        const t = res ? gamePlayers.find((p) => p.id === res.targetId) : null;
+        return (
+          <div className="action-strip-msg">
+            <RoleIcon roleId="sorcerer" size={18} />
+            <span>
+              {res && t
+                ? `ผลตรวจสอบ #${padSeat(t.seatNumber)} ${t.name}: ${res.isSeer ? 'คือเทพพยากรณ์!' : 'ไม่ใช่เทพพยากรณ์'}`
+                : 'จอมเวทมืดตื่นขึ้น — เลือกตรวจสอบผู้เล่น 1 คนเพื่อหาเทพพยากรณ์'}
             </span>
           </div>
         );
@@ -660,19 +682,26 @@ export function GameView({
 
     if (room.phase === 'game_over' && !dismissedGameOver) {
       const isVillage = room.winner === 'village';
+      const isTanner = room.winner === 'tanner';
       return (
         <div className="overlay-backdrop">
           <div className="panel overlay-card">
-            <div className="overlay-emblem" style={{ color: isVillage ? 'var(--sage)' : 'var(--crimson)' }}>
-              {isVillage ? <Trophy size={32} /> : <Flame size={32} />}
+            <div className="overlay-emblem" style={{ color: isVillage ? 'var(--sage)' : isTanner ? 'var(--brass)' : 'var(--crimson)' }}>
+              {isVillage ? <Trophy size={32} /> : isTanner ? <Skull size={32} /> : <WolfCrestIcon size={32} />}
             </div>
-            <h2 className="overlay-heading" style={{ color: isVillage ? '#7ee3b8' : '#f49b9b' }}>
-              {isVillage ? 'ฝ่ายชาวบ้านเป็นฝ่ายชนะ' : 'ฝ่ายหมาป่าเป็นฝ่ายชนะ'}
+            <h2 className="overlay-heading" style={{ color: isVillage ? '#7ee3b8' : isTanner ? '#e5b76b' : '#f49b9b' }}>
+              {isVillage
+                ? 'ฝ่ายชาวบ้านเป็นฝ่ายชนะ'
+                : isTanner
+                ? `คนคลั่ง (${room.winnerPlayerName || 'Tanner'}) ชนะคนเดียว!`
+                : 'ฝ่ายมนุษย์หมาป่าเป็นฝ่ายชนะ'}
             </h2>
             <p className="overlay-copy" style={{ marginBottom: 22 }}>
               {isVillage
-                ? 'หมาป่าทั้งหมดถูกกำจัดออกจากหมู่บ้านแล้ว ความสงบสุขกลับคืนมา'
-                : 'ฝูงหมาป่ากลืนกินหมู่บ้านได้สำเร็จ'}
+                ? 'มนุษย์หมาป่าทั้งหมดถูกกำจัดออกจากหมู่บ้านแล้ว ความสงบสุขกลับคืนมา'
+                : isTanner
+                ? 'คนคลั่งหลอกให้หมู่บ้านโหวตประหารตัวเองได้สำเร็จ!'
+                : 'ฝูงมนุษย์หมาป่ากลืนกินหมู่บ้านได้สำเร็จ'}
             </p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-surface" onClick={() => setDismissedGameOver(true)}>
@@ -696,7 +725,9 @@ export function GameView({
   const phaseInfo = getPhaseInfo(room);
   const PhaseIcon = phaseInfo.Icon;
   const wolfMates =
-    me?.role === 'werewolf' ? gamePlayers.filter((p) => p.role === 'werewolf' && p.id !== me.id) : [];
+    isPackWolf(me?.role) || me?.role === 'minion'
+      ? gamePlayers.filter((p) => isPackWolf(p.role) && p.id !== me.id)
+      : [];
 
   return (
     <section className="game-shell">
@@ -785,6 +816,7 @@ export function GameView({
 
                   const roleInfo = p.role ? catalog[p.role] || FALLBACK_ROLES[p.role] : null;
                   const seerKnown = room.privateData?.seerResults?.[p.id];
+                  const sorcKnown = room.privateData?.sorcererResults?.[p.id];
                   const isDocBlocked =
                     room.phase === 'night' &&
                     me?.role === 'doctor' &&
@@ -876,7 +908,13 @@ export function GameView({
                         {seerKnown ? (
                           <span className={`tag-pill ${seerKnown === 'werewolf' ? 'crimson' : 'sage'}`}>
                             <Eye size={11} />
-                            {seerKnown === 'werewolf' ? 'หมาป่า' : 'ชาวบ้าน'}
+                            {seerKnown === 'werewolf' ? 'มนุษย์หมาป่า' : 'ชาวบ้าน'}
+                          </span>
+                        ) : null}
+                        {sorcKnown !== undefined ? (
+                          <span className={`tag-pill ${sorcKnown ? 'crimson' : ''}`}>
+                            <RoleIcon roleId="sorcerer" size={11} />
+                            {sorcKnown ? 'เทพพยากรณ์!' : 'ไม่ใช่เทพพยากรณ์'}
                           </span>
                         ) : null}
                         {isDocBlocked ? (

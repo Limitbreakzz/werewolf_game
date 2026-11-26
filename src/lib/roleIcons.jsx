@@ -22,9 +22,31 @@ import {
   Flame,
   Hourglass,
   Landmark,
+  Award,
+  Skull,
+  Wand2,
+  UserX,
+  PawPrint,
 } from 'lucide-react';
 
-export const ROLE_ORDER = ['werewolf', 'seer', 'doctor', 'witch', 'hunter', 'villager'];
+export const ROLE_ORDER = [
+  'werewolf',
+  'wolf_cub',
+  'minion',
+  'sorcerer',
+  'seer',
+  'doctor',
+  'witch',
+  'hunter',
+  'mayor',
+  'lycan',
+  'villager',
+  'tanner',
+];
+
+export function isPackWolf(roleId) {
+  return roleId === 'werewolf' || roleId === 'wolf_cub';
+}
 
 export const FALLBACK_ROLES = {
   werewolf: {
@@ -36,14 +58,32 @@ export const FALLBACK_ROLES = {
     color: '#C83232',
     description: 'ทุกคืนร่วมกับฝูงมนุษย์หมาป่าเลือกเหยื่อ 1 คนเพื่อกำจัด และแฝงตัวในหมู่บ้านตอนกลางวัน',
   },
-  villager: {
-    id: 'villager',
-    nameTh: 'ชาวบ้าน',
-    nameEn: 'Villager',
-    team: 'village',
-    points: 1,
-    color: '#A5A095',
-    description: 'ไม่มีพลังพิเศษตอนกลางคืน ใช้การสังเกต คำพูด และตรรกะเพื่อจับผิดมนุษย์หมาป่าตอนกลางวัน',
+  wolf_cub: {
+    id: 'wolf_cub',
+    nameTh: 'ลูกมนุษย์หมาป่า',
+    nameEn: 'Wolf Cub',
+    team: 'werewolf',
+    points: -8,
+    color: '#D94646',
+    description: 'ตื่นพร้อมฝูงมนุษย์หมาป่าทุกคืน หากลูกมนุษย์หมาป่าถูกกำจัด คืนถัดไปฝูงหมาป่าจะล่าได้ 2 คน',
+  },
+  minion: {
+    id: 'minion',
+    nameTh: 'สมุนหมาป่า',
+    nameEn: 'Minion',
+    team: 'werewolf',
+    points: -6,
+    color: '#B84A4A',
+    description: 'อยู่ฝ่ายมนุษย์หมาป่า รู้ว่าใครคือหมาป่าตั้งแต่เริ่มเกมแต่ไม่ตื่นล่า (เทพพยากรณ์ส่องเห็นเป็นชาวบ้าน)',
+  },
+  sorcerer: {
+    id: 'sorcerer',
+    nameTh: 'จอมเวทมืด',
+    nameEn: 'Sorcerer',
+    team: 'werewolf',
+    points: -3,
+    color: '#9333EA',
+    description: 'อยู่ฝ่ายมนุษย์หมาป่า ทุกคืนส่องผู้เล่น 1 คนเพื่อหาว่าใครคือเทพพยากรณ์ (เทพพยากรณ์ส่องเห็นเป็นชาวบ้าน)',
   },
   seer: {
     id: 'seer',
@@ -81,6 +121,42 @@ export const FALLBACK_ROLES = {
     color: '#D6A354',
     description: 'หากถูกกำจัดไม่ว่ากลางวันหรือกลางคืน สามารถเลือกยิงผู้เล่น 1 คนให้ตายตามไปได้ทันที',
   },
+  mayor: {
+    id: 'mayor',
+    nameTh: 'นายกเทศมนตรี',
+    nameEn: 'Mayor',
+    team: 'village',
+    points: 2,
+    color: '#E0B45A',
+    description: 'ผู้นำหมู่บ้าน คะแนนโหวตประหารในตอนกลางวันของนายกเทศมนตรีนับเป็น 2 คะแนน',
+  },
+  lycan: {
+    id: 'lycan',
+    nameTh: 'ไลแคน',
+    nameEn: 'Lycan',
+    team: 'village',
+    points: -1,
+    color: '#8C9AB0',
+    description: 'อยู่ฝ่ายชาวบ้าน แต่ต้องคำสาปทำให้เทพพยากรณ์ส่องเห็นเป็นฝ่ายมนุษย์หมาป่า',
+  },
+  villager: {
+    id: 'villager',
+    nameTh: 'ชาวบ้าน',
+    nameEn: 'Villager',
+    team: 'village',
+    points: 1,
+    color: '#A5A095',
+    description: 'ไม่มีพลังพิเศษตอนกลางคืน ใช้การสังเกต คำพูด และตรรกะเพื่อจับผิดมนุษย์หมาป่าตอนกลางวัน',
+  },
+  tanner: {
+    id: 'tanner',
+    nameTh: 'คนคลั่ง',
+    nameEn: 'Tanner',
+    team: 'independent',
+    points: 0,
+    color: '#D97742',
+    description: 'ฝ่ายอิสระ ชนะคนเดียวทันทีหากถูกโหวตประหารตอนกลางวัน (ถ้าตายตอนกลางคืนจะแพ้)',
+  },
 };
 
 export const AVATAR_CRESTS = [
@@ -103,7 +179,6 @@ export const AVATAR_CRESTS = [
 ];
 
 export const AVATARS = AVATAR_CRESTS.map((c) => c.id);
-
 const AVATAR_MAP = Object.fromEntries(AVATAR_CRESTS.map((c) => [c.id, c.Icon]));
 
 export function PlayerAvatar({ avatarId, size = 18, strokeWidth = 1.75, className = '' }) {
@@ -114,7 +189,6 @@ export function PlayerAvatar({ avatarId, size = 18, strokeWidth = 1.75, classNam
   return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
 }
 
-// Geometric 24x24 Wolf Crest SVG matching Lucide's exact 1.75px stroke language
 export function WolfCrestIcon({ size = 20, strokeWidth = 1.75, className = '' }) {
   return (
     <svg
@@ -142,6 +216,12 @@ export function RoleIcon({ roleId, size = 20, strokeWidth = 1.75, className = ''
   switch (roleId) {
     case 'werewolf':
       return <WolfCrestIcon size={size} strokeWidth={strokeWidth} className={className} />;
+    case 'wolf_cub':
+      return <PawPrint {...props} />;
+    case 'minion':
+      return <UserX {...props} />;
+    case 'sorcerer':
+      return <Wand2 {...props} />;
     case 'seer':
       return <Eye {...props} />;
     case 'doctor':
@@ -150,6 +230,12 @@ export function RoleIcon({ roleId, size = 20, strokeWidth = 1.75, className = ''
       return <FlaskConical {...props} />;
     case 'hunter':
       return <Crosshair {...props} />;
+    case 'mayor':
+      return <Award {...props} />;
+    case 'lycan':
+      return <Moon {...props} />;
+    case 'tanner':
+      return <Skull {...props} />;
     case 'villager':
       return <User {...props} />;
     default:

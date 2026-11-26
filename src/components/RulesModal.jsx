@@ -31,17 +31,21 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
         <div className="modal-body">
           <div className="rules-goal-box">
             <p>
-              <strong style={{ color: '#7ee3b8' }}>ฝ่ายชาวบ้าน:</strong> สังเกต พูดคุย และโหวตกำจัดหมาป่าทั้งหมดออกจากหมู่บ้าน
+              <strong style={{ color: '#7ee3b8' }}>ฝ่ายชาวบ้าน:</strong> สังเกต พูดคุย และโหวตกำจัดมนุษย์หมาป่าทั้งหมดออกจากหมู่บ้าน
             </p>
             <p>
-              <strong style={{ color: '#f49b9b' }}>ฝ่ายหมาป่า:</strong> แฝงตัวและล่าชาวบ้านจนจำนวนหมาป่ามากกว่าหรือเท่ากับฝ่ายชาวบ้านที่เหลืออยู่
+              <strong style={{ color: '#f49b9b' }}>ฝ่ายมนุษย์หมาป่า:</strong> แฝงตัวและล่าชาวบ้านจนจำนวนหมาป่ามากกว่าหรือเท่ากับผู้ที่เหลืออยู่
+            </p>
+            <p>
+              <strong style={{ color: '#e5b76b' }}>ฝ่ายอิสระ (คนคลั่ง):</strong> หลอกให้หมู่บ้านโหวตประหารตัวเองตอนกลางวันเพื่อชนะคนเดียวทันที
             </p>
           </div>
 
           <div className="rules-grid">
             {ROLE_ORDER.map((id) => {
               const r = catalog[id] || FALLBACK_ROLES[id];
-              const isWolf = r.team === 'werewolf';
+              const teamCls = r.team === 'werewolf' ? 'crimson' : r.team === 'independent' ? 'brass' : 'sage';
+              const teamLabel = r.team === 'werewolf' ? 'ฝ่ายมนุษย์หมาป่า' : r.team === 'independent' ? 'ฝ่ายอิสระ' : 'ฝ่ายชาวบ้าน';
               const artUrl = getRoleImage(id);
               return (
                 <div className="rule-item rule-item-with-art" key={id}>
@@ -62,9 +66,7 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
                             ({r.nameEn})
                           </span>
                         </div>
-                        <span className={`tag-pill ${isWolf ? 'crimson' : 'sage'}`}>
-                          {isWolf ? 'ฝ่ายหมาป่า' : 'ฝ่ายชาวบ้าน'}
-                        </span>
+                        <span className={`tag-pill ${teamCls}`}>{teamLabel}</span>
                       </div>
                     </div>
                     <p className="muted" style={{ fontSize: '0.84rem', lineHeight: 1.52 }}>

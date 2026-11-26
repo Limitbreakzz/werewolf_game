@@ -225,8 +225,14 @@ export function App() {
       if (res?.ok && res.result) {
         const isWolf = res.result.team === 'werewolf';
         pushToast(
-          `ผลตรวจสอบ ${res.result.targetName}: ${isWolf ? 'ฝ่ายหมาป่า!' : 'ฝ่ายชาวบ้าน'}`,
+          `ผลตรวจสอบ ${res.result.targetName}: ${isWolf ? 'ฝ่ายมนุษย์หมาป่า!' : 'ฝ่ายชาวบ้าน'}`,
           isWolf ? 'error' : 'success'
+        );
+      } else if (res?.ok && res.sorcererResult) {
+        const { targetName, isSeer } = res.sorcererResult;
+        pushToast(
+          `ผลส่อง ${targetName}: ${isSeer ? 'คือเทพพยากรณ์!' : 'ไม่ใช่เทพพยากรณ์'}`,
+          isSeer ? 'success' : 'info'
         );
       } else if (!res?.ok && res?.error) {
         pushToast(res.error, 'error');
