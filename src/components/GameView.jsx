@@ -195,8 +195,13 @@ export function GameView({
         setWitchDraft((prev) => ({ ...prev, poisonTargetId: target.id, pickingPoison: false }));
       }
     } else if (room.phase === 'day_vote') {
-      // Select candidate first -> user clicks Confirm Vote button to prevent mis-taps
-      setDraftVoteId(target.id);
+      // First tap selects candidate; second tap on the same candidate confirms vote immediately!
+      if (draftVoteId === target.id) {
+        onDayVote(target.id);
+        setDraftVoteId(null);
+      } else {
+        setDraftVoteId(target.id);
+      }
     } else if (room.phase === 'hunter_revenge') {
       onHunterShoot(target.id);
     }
@@ -841,6 +846,22 @@ export function GameView({
                       </div>
 
                       <div className="seat-card-name">{p.name}</div>
+
+                      {room.phase === 'day_vote' && draftVoteId === p.id && targetable ? (
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-crimson"
+                          style={{ marginTop: 2 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDayVote(p.id);
+                            setDraftVoteId(null);
+                          }}
+                        >
+                          <Check size={13} />
+                          ยืนยันโหวต
+                        </button>
+                      ) : null}
 
                       <div className="seat-card-badges">
                         {p.id === room.myId ? <span className="tag-pill brass">คุณ</span> : null}

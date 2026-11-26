@@ -69,6 +69,16 @@ export function App() {
 
         if (nextRoom.phase === 'night') {
           soundFX.playNight();
+          if (prevPhase === 'day_vote' && nextRoom.lastVoteSummary) {
+            const s = nextRoom.lastVoteSummary;
+            if (s.eliminatedName) {
+              pushToast(`ผลโหวต: ${s.eliminatedName} ถูกโหวตออกจากหมู่บ้าน`, 'error');
+            } else if (s.reason === 'tie') {
+              pushToast('ผลโหวตเสมอกัน วันนี้ไม่มีใครถูกโหวตออก', 'info');
+            } else {
+              pushToast('ผลโหวต: งดออกเสียง วันนี้ไม่มีใครถูกโหวตออก', 'info');
+            }
+          }
           if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.night_start, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'dawn') {
           if (nextRoom.lastDawnSummary?.deaths?.length > 0) soundFX.playDeath();
@@ -365,15 +375,46 @@ export function App() {
           onNightAction={handleNightAction}
           onDayReady={() => {
             soundFX.playClick();
-            socket.emit('day_ready');
+            if (!socket.connected) {
+              pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
+              return;
+            }
+            setRoom((curr) => {
+              if (!curr) return curr;
+              const set = new Set(curr.dayReadyIds || []);
+              if (set.has(curr.myId)) set.delete(curr.myId);
+              else set.add(curr.myId);
+              return { ...curr, dayReadyIds: Array.from(set) };
+            });
+            socket.emit('day_ready', {}, (res) => {
+              if (!res?.ok && res?.error) pushToast(res.error, 'error');
+            });
           }}
           onDayVote={(targetId) => {
             soundFX.playClick();
-            socket.emit('day_vote', { targetId });
+            if (!socket.connected) {
+              pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
+              return;
+            }
+            setRoom((curr) =>
+              curr
+                ? {
+                    ...curr,
+                    dayVotes: { ...(curr.dayVotes || {}), [curr.myId]: targetId },
+                  }
+                : curr
+            );
+            socket.emit('day_vote', { targetId }, (res) => {
+              if (!res?.ok) {
+                pushToast(res?.error || 'ส่งคะแนนโหวตไม่สำเร็จ กรุณาลองอีกครั้ง', 'error');
+              }
+            });
           }}
           onHunterShoot={(targetId) => {
             soundFX.playClick();
-            socket.emit('hunter_shoot', { targetId });
+            socket.emit('hunter_shoot', { targetId }, (res) => {
+              if (!res?.ok && res?.error) pushToast(res.error, 'error');
+            });
           }}
           onSendChat={handleSendChat}
           onModControl={handleModControl}
