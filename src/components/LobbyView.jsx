@@ -198,6 +198,7 @@ export function LobbyView({
           <div className="panel lobby-panel">
             <div className="panel-header" style={{ marginBottom: 12 }}>
               <h2>รูปแบบการคุมเกมช่วงกลางคืน</h2>
+              {!isHost ? <span className="tag-pill">เฉพาะหัวหน้าห้องเลือกได้</span> : null}
             </div>
             <div className="mode-list" role="radiogroup" aria-label="รูปแบบการคุมเกมช่วงกลางคืน">
               {CONTROL_MODES.map((m) => {

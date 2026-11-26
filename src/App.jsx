@@ -38,8 +38,9 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY);
-    if (saved) {
+    const tryRejoin = () => {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (!saved) return;
       try {
         const { roomCode, playerId } = JSON.parse(saved);
         if (roomCode && playerId) {
@@ -50,7 +51,10 @@ export function App() {
       } catch {
         sessionStorage.removeItem(SESSION_KEY);
       }
-    }
+    };
+
+    if (socket.connected) tryRejoin();
+    socket.on('connect', tryRejoin);
 
     const onRoomState = (nextRoom) => {
       const prevPhase = prevPhaseRef.current;
@@ -118,6 +122,7 @@ export function App() {
     socket.on('kicked', onKicked);
 
     return () => {
+      socket.off('connect', tryRejoin);
       socket.off('room_state', onRoomState);
       socket.off('chat_message', onChatMessage);
       socket.off('kicked', onKicked);
@@ -281,7 +286,18 @@ export function App() {
             });
           }}
           onKickPlayer={(targetId) => socket.emit('kick_player', { targetId })}
-          onUpdateSettings={(partial) => socket.emit('update_settings', partial)}
+          onUpdateSettings={(partial) => {
+            soundFX.playClick();
+            if (!socket.connected) {
+              pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
+              return;
+            }
+            socket.emit('update_settings', partial, (res) => {
+              if (!res?.ok) {
+                pushToast(res?.error || 'เปลี่ยนการตั้งค่าไม่สำเร็จ (เฉพาะหัวหน้าห้อง)', 'error');
+              }
+            });
+          }}
           onStartGame={() => {
             soundFX.playClick();
             socket.emit('start_game', {}, (res) => {
