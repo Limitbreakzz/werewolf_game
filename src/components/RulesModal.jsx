@@ -47,7 +47,7 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
                 <div className="rule-item rule-item-with-art" key={id}>
                   {artUrl ? (
                     <div className="rule-role-art">
-                      <img src={artUrl} alt={r.nameTh} loading="lazy" />
+                      <img src={artUrl} alt={r.nameTh} />
                     </div>
                   ) : null}
                   <div className="rule-item-content">
