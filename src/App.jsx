@@ -454,7 +454,7 @@ export function App() {
             });
           }}
           onKickPlayer={(targetId) => socket.emit('kick_player', { targetId })}
-          onUpdateSettings={(partial) => {
+          onUpdateSettings={(partial, successMessage) => {
             if (!room || room.hostId !== room.myId) {
               pushToast('เฉพาะหัวหน้าห้องเท่านั้นที่ปรับการตั้งค่าได้', 'error');
               return;
@@ -483,6 +483,8 @@ export function App() {
             socket.emit('update_settings', partial, (res) => {
               if (!res?.ok) {
                 pushToast(res?.error || 'เปลี่ยนการตั้งค่าไม่สำเร็จ (เฉพาะหัวหน้าห้อง)', 'error');
+              } else if (successMessage) {
+                pushToast(successMessage, 'success');
               }
             });
           }}

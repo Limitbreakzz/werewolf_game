@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   ChevronDown,
   ChevronUp,
+  Save,
+  Pencil,
 } from 'lucide-react';
 import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { QrCodeBox } from './QrCodeBox.jsx';
@@ -68,14 +70,38 @@ export function LobbyView({
   onTestNarrator,
 }) {
   const [showAllRoles, setShowAllRoles] = useState(false);
+  const [editingRoles, setEditingRoles] = useState(false);
+  const [draftRoles, setDraftRoles] = useState(null);
   const isHost = room.hostId === room.myId;
   const me = room.players.find((p) => p.id === room.myId);
   const isManualMod = room.settings.controlMode === 'manual_mod';
   const activeCount = isManualMod ? Math.max(0, room.players.length - 1) : room.players.length;
   const canStart = activeCount >= 4;
   const catalog = room.rolesCatalog || FALLBACK_ROLES;
-  const roleConfig = room.settings.roleConfig || {};
+  const savedRoleConfig = room.settings.roleConfig || {};
+  const roleConfig = editingRoles && draftRoles ? draftRoles : savedRoleConfig;
+  const totalDraftRoles = ROLE_ORDER.reduce((sum, id) => sum + (Number(roleConfig[id]) || 0), 0);
   const inviteUrl = `${window.location.origin}/?room=${room.code}`;
+
+  const openRoleEditor = () => {
+    setDraftRoles({ ...savedRoleConfig });
+    setEditingRoles(true);
+    setShowAllRoles(true);
+  };
+
+  const handleSaveRoles = () => {
+    const toSave = draftRoles ? { ...draftRoles } : { ...savedRoleConfig };
+    onUpdateSettings({ autoRoles: false, roleConfig: toSave }, 'บันทึกชุดบทบาทเรียบร้อยแล้ว');
+    setEditingRoles(false);
+    setDraftRoles(null);
+    setShowAllRoles(false);
+  };
+
+  const handleCancelRoles = () => {
+    setEditingRoles(false);
+    setDraftRoles(null);
+    setShowAllRoles(false);
+  };
 
   return (
     <section className="lobby-shell">
@@ -278,23 +304,32 @@ export function LobbyView({
             <label className="checkbox-row">
               <input
                 type="checkbox"
-                checked={room.settings.autoRoles}
-                onChange={(e) => onUpdateSettings({ autoRoles: e.target.checked })}
+                checked={room.settings.autoRoles && !editingRoles}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setEditingRoles(false);
+                    setDraftRoles(null);
+                    setShowAllRoles(false);
+                    onUpdateSettings({ autoRoles: true });
+                  } else {
+                    openRoleEditor();
+                  }
+                }}
               />
               <span>จัดสมดุลบทบาทอัตโนมัติ ({activeCount} ผู้เล่น)</span>
             </label>
           ) : (
             <div className="muted" style={{ fontSize: '0.85rem' }}>
-              {room.settings.autoRoles ? `จัดสมดุลบทบาทอัตโนมัติ (${activeCount} ผู้เล่น)` : 'หัวหน้าห้องกำลังจัดบทบาทเอง'}
+              {room.settings.autoRoles ? `จัดสมดุลบทบาทอัตโนมัติ (${activeCount} ผู้เล่น)` : 'หัวหน้าห้องจัดชุดบทบาทเอง'}
             </div>
           )}
 
-          {room.settings.autoRoles && !showAllRoles ? (
+          {!editingRoles && !showAllRoles ? (
             <div className="deck-compact-wrap">
               <div className="deck-summary-grid">
-                {ROLE_ORDER.filter((id) => (roleConfig[id] || 0) > 0).map((roleId) => {
+                {ROLE_ORDER.filter((id) => (savedRoleConfig[id] || 0) > 0).map((roleId) => {
                   const r = catalog[roleId] || FALLBACK_ROLES[roleId];
-                  const count = roleConfig[roleId] || 0;
+                  const count = savedRoleConfig[roleId] || 0;
                   return (
                     <div className="deck-summary-chip" key={roleId} title={r.shortDesc || r.description}>
                       <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
@@ -306,23 +341,36 @@ export function LobbyView({
                   );
                 })}
               </div>
-              <button
-                type="button"
-                className="btn btn-xs btn-ghost"
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={() => setShowAllRoles(true)}
-              >
-                <ChevronDown size={14} />
-                ดูรายละเอียดครบทั้ง {ROLE_ORDER.length} บทบาท
-              </button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                {isHost && !room.settings.autoRoles ? (
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-surface"
+                    style={{ flex: 1 }}
+                    onClick={openRoleEditor}
+                  >
+                    <Pencil size={13} />
+                    แก้ไขชุดบทบาท
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn btn-xs btn-ghost"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowAllRoles(true)}
+                >
+                  <ChevronDown size={14} />
+                  ดูครบทั้ง {ROLE_ORDER.length} บทบาท
+                </button>
+              </div>
             </div>
           ) : (
             <div className="deck-expanded-wrap">
               <div className="deck-list">
                 {ROLE_ORDER.map((roleId) => {
                   const r = catalog[roleId] || FALLBACK_ROLES[roleId];
-                  const count = roleConfig[roleId] || 0;
-                  const editable = isHost && !room.settings.autoRoles;
+                  const count = Number(roleConfig[roleId]) || 0;
+                  const editable = isHost && editingRoles;
                   return (
                     <div className={`deck-row ${count > 0 ? 'active-role' : ''}`} key={roleId}>
                       <div className="deck-role-label">
@@ -339,12 +387,17 @@ export function LobbyView({
                           </div>
                         </div>
                       </div>
-                      {isHost ? (
+                      {editable ? (
                         <div className="stepper">
                           <button
                             type="button"
-                            disabled={!editable || count <= 0}
-                            onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.max(0, count - 1) } })}
+                            disabled={count <= 0}
+                            onClick={() =>
+                              setDraftRoles((prev) => ({
+                                ...(prev || savedRoleConfig),
+                                [roleId]: Math.max(0, count - 1),
+                              }))
+                            }
                             aria-label={`ลดจำนวน${r.nameTh}`}
                           >
                             −
@@ -352,8 +405,13 @@ export function LobbyView({
                           <span className="tabular">{count}</span>
                           <button
                             type="button"
-                            disabled={!editable || count >= 8}
-                            onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.min(8, count + 1) } })}
+                            disabled={count >= 8}
+                            onClick={() =>
+                              setDraftRoles((prev) => ({
+                                ...(prev || savedRoleConfig),
+                                [roleId]: Math.min(8, count + 1),
+                              }))
+                            }
                             aria-label={`เพิ่มจำนวน${r.nameTh}`}
                           >
                             +
@@ -366,7 +424,58 @@ export function LobbyView({
                   );
                 })}
               </div>
-              {room.settings.autoRoles ? (
+
+              {isHost && editingRoles ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.84rem',
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid var(--border)',
+                    }}
+                  >
+                    <span className="muted">รวมบทบาทที่จัดไว้</span>
+                    <span
+                      className="tabular"
+                      style={{
+                        fontWeight: 700,
+                        color:
+                          totalDraftRoles === activeCount
+                            ? '#7ee2b8'
+                            : totalDraftRoles > activeCount
+                            ? '#f2a2a2'
+                            : 'var(--brass)',
+                      }}
+                    >
+                      {totalDraftRoles} / {activeCount} คน
+                      {totalDraftRoles < activeCount
+                        ? ` (ขาด ${activeCount - totalDraftRoles} เติมชาวบ้าน)`
+                        : totalDraftRoles > activeCount
+                        ? ` (เกิน ${totalDraftRoles - activeCount})`
+                        : ' (พอดี)'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-sage"
+                      style={{ flex: 1, fontWeight: 700 }}
+                      onClick={handleSaveRoles}
+                    >
+                      <Save size={15} />
+                      บันทึกชุดบทบาท
+                    </button>
+                    <button type="button" className="btn btn-sm btn-ghost" onClick={handleCancelRoles}>
+                      ยกเลิก
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <button
                   type="button"
                   className="btn btn-xs btn-ghost"
@@ -376,7 +485,7 @@ export function LobbyView({
                   <ChevronUp size={14} />
                   ย่อรายการบทบาท
                 </button>
-              ) : null}
+              )}
             </div>
           )}
 
