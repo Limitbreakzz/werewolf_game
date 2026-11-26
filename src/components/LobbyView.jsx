@@ -20,6 +20,13 @@ import {
 import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
 import { QrCodeBox } from './QrCodeBox.jsx';
 
+const DISCUSS_PRESETS = [
+  { seconds: 60, label: '60 วิ', hint: 'เร็ว' },
+  { seconds: 90, label: '90 วิ', hint: 'มาตรฐาน' },
+  { seconds: 150, label: '150 วิ', hint: 'ถกเถียง' },
+  { seconds: 240, label: '240 วิ', hint: 'วงใหญ่' },
+];
+
 const CONTROL_MODES = [
   {
     id: 'no_mod',
@@ -288,21 +295,26 @@ export function LobbyView({
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <label htmlFor="discuss-time" className="field-label">
-              เวลาสนทนาตอนกลางวัน (คุยจริงหน้าโต๊ะ)
-            </label>
-            <select
-              id="discuss-time"
-              className="select-input"
-              value={String(room.settings.discussSeconds)}
-              disabled={!isHost}
-              onChange={(e) => onUpdateSettings({ discussSeconds: Number(e.target.value) })}
-            >
-              <option value="60">60 วินาที (เร็ว)</option>
-              <option value="90">90 วินาที (มาตรฐาน)</option>
-              <option value="150">150 วินาที (ถกเถียงเต็มที่)</option>
-              <option value="240">240 วินาที (วงใหญ่)</option>
-            </select>
+            <span className="field-label">เวลาสนทนาตอนกลางวัน (คุยจริงหน้าโต๊ะ)</span>
+            <div className="time-preset-grid" role="radiogroup" aria-label="เวลาสนทนาตอนกลางวัน">
+              {DISCUSS_PRESETS.map((preset) => {
+                const active = Number(room.settings.discussSeconds) === preset.seconds;
+                return (
+                  <button
+                    key={preset.seconds}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    disabled={!isHost}
+                    className={`time-preset-btn ${active ? 'selected' : ''}`}
+                    onClick={() => onUpdateSettings({ discussSeconds: preset.seconds })}
+                  >
+                    <span className="time-preset-val tabular">{preset.label}</span>
+                    <span className="time-preset-hint">{preset.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 12 }}>
