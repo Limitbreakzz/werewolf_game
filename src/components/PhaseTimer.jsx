@@ -12,7 +12,9 @@ export function PhaseTimer({ phase, phaseEndsAt, timerOffsetMs, settings }) {
   if (!phaseEndsAt) {
     return (
       <div className="timer-wrap">
-        <span className="timer-readout tabular">--</span>
+        <span className="timer-readout tabular">
+          {phase === 'day_defense' || phase === 'day_verdict' ? 'รอโหวต' : '--'}
+        </span>
         <div className="timer-track">
           <div className="timer-fill" style={{ width: '100%' }} />
         </div>

@@ -136,7 +136,10 @@ export function App() {
 
         if (nextRoom.phase === 'night') {
           soundFX.playNight();
-          if ((prevPhase === 'day_vote' || prevPhase === 'day_verdict') && nextRoom.lastVoteSummary) {
+          if (
+            (prevPhase === 'day_vote' || prevPhase === 'day_defense' || prevPhase === 'day_verdict') &&
+            nextRoom.lastVoteSummary
+          ) {
             const s = nextRoom.lastVoteSummary;
             if (s.eliminatedName) {
               pushToast(`ผลตัดสิน: ${s.eliminatedName} ถูกประหารออกจากหมู่บ้าน`, 'error');
