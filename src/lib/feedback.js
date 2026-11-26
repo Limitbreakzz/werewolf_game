@@ -1,5 +1,10 @@
 let cachedVoices = [];
 const activeUtterances = new Set();
+let currentAudio = null;
+const audioQueue = [];
+let isPlayingQueue = false;
+
+const SERVER_URL = (import.meta.env.VITE_SERVER_URL || '').trim().replace(/\/+$/, '');
 
 function loadVoices() {
   try {
@@ -29,16 +34,53 @@ export function vibrateDevice(pattern = [200, 90, 200]) {
   }
 }
 
-// Must be called inside a direct user click gesture (e.g., Start Game / Test Voice)
-// to unlock Web Speech API on Chrome, Safari, and mobile browsers.
 export function unlockSpeech() {
   try {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
-    loadVoices();
-    window.speechSynthesis.resume?.();
-    const silent = new SpeechSynthesisUtterance('');
-    silent.volume = 0;
-    window.speechSynthesis.speak(silent);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      loadVoices();
+      window.speechSynthesis.resume?.();
+      const silent = new SpeechSynthesisUtterance('');
+      silent.volume = 0;
+      window.speechSynthesis.speak(silent);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function playNextAudioInQueue() {
+  if (isPlayingQueue || audioQueue.length === 0) return;
+  const nextText = audioQueue.shift();
+  isPlayingQueue = true;
+
+  const ttsUrl = `${SERVER_URL}/api/tts?text=${encodeURIComponent(nextText)}`;
+  const audio = new Audio(ttsUrl);
+  currentAudio = audio;
+
+  const done = () => {
+    if (currentAudio === audio) currentAudio = null;
+    isPlayingQueue = false;
+    playNextAudioInQueue();
+  };
+
+  audio.onended = done;
+  audio.onerror = done;
+  audio.play().catch(done);
+}
+
+function speakViaServerAudio(text, interrupt) {
+  try {
+    if (interrupt) {
+      audioQueue.length = 0;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      isPlayingQueue = false;
+    }
+    audioQueue.push(text);
+    playNextAudioInQueue();
     return true;
   } catch {
     return false;
@@ -47,13 +89,19 @@ export function unlockSpeech() {
 
 export function speakThai(text, { interrupt = true, muted = false } = {}) {
   try {
-    if (muted || typeof window === 'undefined' || !('speechSynthesis' in window)) return false;
-    const synth = window.speechSynthesis;
+    if (muted || typeof window === 'undefined') return false;
+
     const voices = loadVoices();
     const thVoice =
       voices.find((v) => v.lang && v.lang.toLowerCase() === 'th-th') ||
       voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('th'));
 
+    // If browser has NO Thai system voice (common on Windows Chrome), use cached Thai MP3 TTS from backend!
+    if (!thVoice) {
+      return speakViaServerAudio(text, interrupt);
+    }
+
+    const synth = window.speechSynthesis;
     const doSpeak = () => {
       synth.resume?.();
       const utter = new SpeechSynthesisUtterance(text);
@@ -61,26 +109,27 @@ export function speakThai(text, { interrupt = true, muted = false } = {}) {
       utter.rate = 0.94;
       utter.pitch = 1.0;
       utter.volume = 1.0;
-      if (thVoice) utter.voice = thVoice;
+      utter.voice = thVoice;
 
-      // Prevent Chrome GC bug from dropping utterance before completion
       activeUtterances.add(utter);
       utter.onend = () => activeUtterances.delete(utter);
-      utter.onerror = () => activeUtterances.delete(utter);
+      utter.onerror = () => {
+        activeUtterances.delete(utter);
+        speakViaServerAudio(text, false);
+      };
 
       synth.speak(utter);
     };
 
     if (interrupt && (synth.speaking || synth.pending)) {
       synth.cancel();
-      // Small delay avoids Chromium bug where speak() immediately after cancel() is dropped
       setTimeout(doSpeak, 70);
     } else {
       doSpeak();
     }
     return true;
   } catch {
-    return false;
+    return speakViaServerAudio(text, interrupt);
   }
 }
 
