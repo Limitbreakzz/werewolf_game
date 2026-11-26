@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Copy,
   BookOpen,
@@ -16,6 +16,8 @@ import {
   Smartphone,
   Volume2,
   ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { QrCodeBox } from './QrCodeBox.jsx';
@@ -65,6 +67,7 @@ export function LobbyView({
   onStartGame,
   onTestNarrator,
 }) {
+  const [showAllRoles, setShowAllRoles] = useState(false);
   const isHost = room.hostId === room.myId;
   const me = room.players.find((p) => p.id === room.myId);
   const isManualMod = room.settings.controlMode === 'manual_mod';
@@ -264,50 +267,92 @@ export function LobbyView({
             <span>จัดสมดุลบทบาทอัตโนมัติ ({activeCount} ผู้เล่น)</span>
           </label>
 
-          <div className="deck-list">
-            {ROLE_ORDER.map((roleId) => {
-              const r = catalog[roleId] || FALLBACK_ROLES[roleId];
-              const count = roleConfig[roleId] || 0;
-              const editable = isHost && !room.settings.autoRoles;
-              return (
-                <div className="deck-row" key={roleId}>
-                  <div className="deck-role-label">
-                    <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
-                      <RoleIcon roleId={roleId} size={16} />
-                    </span>
-                    <div className="deck-role-text">
-                      <div className="deck-role-name">
-                        {r.nameTh}{' '}
-                        <span className="subtle" style={{ fontSize: '0.78rem' }}>({r.nameEn})</span>
+          {room.settings.autoRoles && !showAllRoles ? (
+            <div className="deck-compact-wrap">
+              <div className="deck-summary-grid">
+                {ROLE_ORDER.filter((id) => (roleConfig[id] || 0) > 0).map((roleId) => {
+                  const r = catalog[roleId] || FALLBACK_ROLES[roleId];
+                  const count = roleConfig[roleId] || 0;
+                  return (
+                    <div className="deck-summary-chip" key={roleId} title={r.shortDesc || r.description}>
+                      <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
+                        <RoleIcon roleId={roleId} size={15} />
+                      </span>
+                      <span className="deck-summary-name">{r.nameTh}</span>
+                      <span className="deck-summary-count tabular">×{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="btn btn-xs btn-ghost"
+                style={{ marginTop: 8, width: '100%' }}
+                onClick={() => setShowAllRoles(true)}
+              >
+                <ChevronDown size={14} />
+                ดูรายละเอียดครบทั้ง {ROLE_ORDER.length} บทบาท
+              </button>
+            </div>
+          ) : (
+            <div className="deck-expanded-wrap">
+              <div className="deck-list">
+                {ROLE_ORDER.map((roleId) => {
+                  const r = catalog[roleId] || FALLBACK_ROLES[roleId];
+                  const count = roleConfig[roleId] || 0;
+                  const editable = isHost && !room.settings.autoRoles;
+                  return (
+                    <div className={`deck-row ${count > 0 ? 'active-role' : ''}`} key={roleId}>
+                      <div className="deck-role-label">
+                        <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
+                          <RoleIcon roleId={roleId} size={16} />
+                        </span>
+                        <div className="deck-role-text">
+                          <div className="deck-role-name">
+                            {r.nameTh}{' '}
+                            <span className="subtle" style={{ fontSize: '0.78rem' }}>({r.nameEn})</span>
+                          </div>
+                          <div className="deck-role-desc">
+                            {r.shortDesc || FALLBACK_ROLES[roleId]?.shortDesc || r.description}
+                          </div>
+                        </div>
                       </div>
-                      <div className="deck-role-desc">
-                        {r.shortDesc || FALLBACK_ROLES[roleId]?.shortDesc || r.description}
+                      <div className="stepper">
+                        <button
+                          type="button"
+                          disabled={!editable || count <= 0}
+                          onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.max(0, count - 1) } })}
+                          aria-label={`ลดจำนวน${r.nameTh}`}
+                        >
+                          −
+                        </button>
+                        <span className="tabular">{count}</span>
+                        <button
+                          type="button"
+                          disabled={!editable || count >= 8}
+                          onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.min(8, count + 1) } })}
+                          aria-label={`เพิ่มจำนวน${r.nameTh}`}
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  <div className="stepper">
-                    <button
-                      type="button"
-                      disabled={!editable || count <= 0}
-                      onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.max(0, count - 1) } })}
-                      aria-label={`ลดจำนวน${r.nameTh}`}
-                    >
-                      −
-                    </button>
-                    <span className="tabular">{count}</span>
-                    <button
-                      type="button"
-                      disabled={!editable || count >= 8}
-                      onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.min(8, count + 1) } })}
-                      aria-label={`เพิ่มจำนวน${r.nameTh}`}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+              {room.settings.autoRoles ? (
+                <button
+                  type="button"
+                  className="btn btn-xs btn-ghost"
+                  style={{ marginTop: 4, width: '100%' }}
+                  onClick={() => setShowAllRoles(false)}
+                >
+                  <ChevronUp size={14} />
+                  ย่อรายการบทบาท
+                </button>
+              ) : null}
+            </div>
+          )}
 
           <div style={{ marginBottom: 18 }}>
             <span className="field-label">เวลาสนทนาตอนกลางวัน (คุยจริงหน้าโต๊ะ)</span>
