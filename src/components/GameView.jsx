@@ -116,7 +116,7 @@ export function GameView({
   const gamePlayers = useMemo(() => room.players.filter((p) => !p.isModerator), [room.players]);
   const aliveCount = useMemo(() => gamePlayers.filter((p) => p.alive).length, [gamePlayers]);
 
-  const canSeeWolf = isPackWolf(me?.role) || isMod || (!me?.alive && !isMod) || room.phase === 'game_over';
+  const canSeeWolf = isPackWolf(me?.role) || isMod || room.phase === 'game_over';
   const canSeeGhost = isMod || !me?.alive || room.phase === 'game_over';
 
   // Vibrate phone when it becomes your Night Turn!
