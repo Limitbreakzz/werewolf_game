@@ -1354,6 +1354,74 @@ body {
 }
 
 /* Responsive */
+/* Illustrated Role Card Artwork */
+.role-reveal-art {
+  width: 190px;
+  aspect-ratio: 3 / 4;
+  margin: 0 auto 16px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(214, 163, 84, 0.45);
+  background: var(--surface-inset);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+
+.role-reveal-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.secret-role-art {
+  width: 100%;
+  height: 168px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(214, 163, 84, 0.32);
+  background: var(--surface-inset);
+}
+
+.secret-role-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  display: block;
+}
+
+.rule-item-with-art {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rule-role-art {
+  width: 78px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(214, 163, 84, 0.3);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.rule-role-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rule-item-content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* QR Code, Night Mode Selector, Sleeping Stage, Moderator Control */
 .qr-frame {
   padding: 6px;

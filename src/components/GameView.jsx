@@ -29,7 +29,7 @@ import {
   ShieldCheck,
   Vibrate,
 } from 'lucide-react';
-import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon } from '../lib/roleIcons.jsx';
+import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon, getRoleImage } from '../lib/roleIcons.jsx';
 import { vibrateDevice } from '../lib/feedback.js';
 import { PhaseTimer } from './PhaseTimer.jsx';
 
@@ -584,9 +584,15 @@ export function GameView({
               </>
             ) : (
               <>
-                <div className="overlay-emblem" style={{ color: myRoleObj.color || 'var(--brass)' }}>
-                  <RoleIcon roleId={myRoleObj.id} size={32} />
-                </div>
+                {getRoleImage(myRoleObj.id) ? (
+                  <div className="role-reveal-art">
+                    <img src={getRoleImage(myRoleObj.id)} alt={myRoleObj.nameTh} />
+                  </div>
+                ) : (
+                  <div className="overlay-emblem" style={{ color: myRoleObj.color || 'var(--brass)' }}>
+                    <RoleIcon roleId={myRoleObj.id} size={32} />
+                  </div>
+                )}
                 <div className="muted" style={{ fontSize: '0.88rem', marginBottom: 4 }}>บทบาทของคุณคือ</div>
                 <h2 className="overlay-heading" style={{ color: myRoleObj.color || 'var(--ink)' }}>
                   {myRoleObj.nameTh} ({myRoleObj.nameEn})
@@ -886,6 +892,11 @@ export function GameView({
 
               {!hideRole && myRoleObj ? (
                 <>
+                  {getRoleImage(myRoleObj.id) ? (
+                    <div className="secret-role-art">
+                      <img src={getRoleImage(myRoleObj.id)} alt={myRoleObj.nameTh} />
+                    </div>
+                  ) : null}
                   <div className="secret-role-row">
                     <div className="secret-emblem" style={{ color: myRoleObj.color || 'var(--brass)' }}>
                       <RoleIcon roleId={myRoleObj.id} size={24} />

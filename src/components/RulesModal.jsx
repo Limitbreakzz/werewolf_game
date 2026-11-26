@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, BookOpen } from 'lucide-react';
-import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
+import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, getRoleImage } from '../lib/roleIcons.jsx';
 
 export function RulesModal({ open, onClose, rolesCatalog }) {
   useEffect(() => {
@@ -42,27 +42,35 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
             {ROLE_ORDER.map((id) => {
               const r = catalog[id] || FALLBACK_ROLES[id];
               const isWolf = r.team === 'werewolf';
+              const artUrl = getRoleImage(id);
               return (
-                <div className="rule-item" key={id}>
-                  <div className="rule-item-head">
-                    <div className="hud-phase-badge" style={{ color: r.color || 'var(--brass)', width: 38, height: 38 }}>
-                      <RoleIcon roleId={id} size={18} />
+                <div className="rule-item rule-item-with-art" key={id}>
+                  {artUrl ? (
+                    <div className="rule-role-art">
+                      <img src={artUrl} alt={r.nameTh} loading="lazy" />
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>
-                        {r.nameTh}{' '}
-                        <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 400 }}>
-                          ({r.nameEn})
+                  ) : null}
+                  <div className="rule-item-content">
+                    <div className="rule-item-head">
+                      <div className="hud-phase-badge" style={{ color: r.color || 'var(--brass)', width: 32, height: 32 }}>
+                        <RoleIcon roleId={id} size={15} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>
+                          {r.nameTh}{' '}
+                          <span className="muted" style={{ fontSize: '0.82rem', fontWeight: 400 }}>
+                            ({r.nameEn})
+                          </span>
+                        </div>
+                        <span className={`tag-pill ${isWolf ? 'crimson' : 'sage'}`}>
+                          {isWolf ? 'ฝ่ายหมาป่า' : 'ฝ่ายชาวบ้าน'}
                         </span>
                       </div>
-                      <span className={`tag-pill ${isWolf ? 'crimson' : 'sage'}`}>
-                        {isWolf ? 'ฝ่ายหมาป่า' : 'ฝ่ายชาวบ้าน'}
-                      </span>
                     </div>
+                    <p className="muted" style={{ fontSize: '0.84rem', lineHeight: 1.52 }}>
+                      {r.description}
+                    </p>
                   </div>
-                  <p className="muted" style={{ fontSize: '0.86rem', lineHeight: 1.55 }}>
-                    {r.description}
-                  </p>
                 </div>
               );
             })}

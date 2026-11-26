@@ -151,4 +151,9 @@ export function RoleIcon({ roleId, size = 20, strokeWidth = 1.75, className = ''
   }
 }
 
+export function getRoleImage(roleId) {
+  if (!ROLE_ORDER.includes(roleId)) return null;
+  return `/roles/${roleId}.jpg`;
+}
+
 export { Flame };
