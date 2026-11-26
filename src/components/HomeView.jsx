@@ -58,7 +58,7 @@ export function HomeView({
               เกมสืบสวนและหักเหลี่ยมแบบเรียลไทม์ เล่นออนไลน์พร้อมเพื่อนผ่านรหัสห้อง 4 หลัก หรือเปิดโต๊ะเล่นกับบอท AI ได้ทันที
             </p>
             <div className="role-strip" style={{ marginTop: 14 }}>
-              {ROLE_ORDER.slice(0, 5).map((id) => {
+              {['werewolf', 'seer', 'doctor', 'witch'].map((id) => {
                 const role = FALLBACK_ROLES[id];
                 return (
                   <span className="role-chip" key={id}>
@@ -73,7 +73,7 @@ export function HomeView({
                 style={{ cursor: 'pointer', color: 'var(--brass)', borderColor: 'rgba(214, 163, 84, 0.35)' }}
                 onClick={onOpenRules}
               >
-                +{ROLE_ORDER.length - 5} บทบาททั้งหมด
+                +{ROLE_ORDER.length - 4} บทบาท
               </button>
             </div>
           </div>

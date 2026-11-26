@@ -336,10 +336,10 @@ body {
 
 .hero-title {
   font-family: 'Cormorant Garamond', 'IBM Plex Sans Thai', serif;
-  font-size: clamp(2.6rem, 5.2vw, 4.1rem);
+  font-size: clamp(2.1rem, 3.4vw, 3rem);
   font-weight: 700;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
