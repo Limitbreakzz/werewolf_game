@@ -15,8 +15,8 @@ export function App() {
   const [timerOffsetMs, setTimerOffsetMs] = useState(0);
   const [playerName, setPlayerName] = useState(() => localStorage.getItem('werewolf_name') || '');
   const [avatar, setAvatar] = useState(() => {
-    const saved = localStorage.getItem('werewolf_avatar');
-    return saved && AVATARS.includes(saved) ? saved : AVATARS[0];
+    const saved = localStorage.getItem('werewolf_avatar') || '';
+    return saved.startsWith('data:image/') ? saved : '';
   });
   const [roomCodeInput, setRoomCodeInput] = useState(() => {
     const p = new URLSearchParams(window.location.search).get('room');
@@ -259,6 +259,7 @@ export function App() {
             soundFX.playClick();
             setRulesOpen(true);
           }}
+          onError={(msg) => pushToast(msg, 'error')}
         />
       ) : room.phase === 'lobby' ? (
         <LobbyView

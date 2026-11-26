@@ -101,6 +101,9 @@ export const AVATARS = AVATAR_CRESTS.map((c) => c.id);
 const AVATAR_MAP = Object.fromEntries(AVATAR_CRESTS.map((c) => [c.id, c.Icon]));
 
 export function PlayerAvatar({ avatarId, size = 18, strokeWidth = 1.75, className = '' }) {
+  if (typeof avatarId === 'string' && avatarId.startsWith('data:image/')) {
+    return <img src={avatarId} alt="" className={`avatar-photo ${className}`} />;
+  }
   const Icon = AVATAR_MAP[avatarId] || User;
   return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
 }

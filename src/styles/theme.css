@@ -864,6 +864,54 @@ body {
   border-style: dashed;
 }
 
+.profile-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-photo-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-inset);
+  color: var(--brass);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.16s var(--ease-out), transform 0.12s ease;
+}
+
+.profile-photo-preview:hover {
+  border-color: var(--brass);
+  transform: scale(1.03);
+}
+
+.profile-upload-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.chat-author .avatar-photo {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: -4px;
+  margin-right: 6px;
+}
+
 .seat-avatar-badge {
   width: 36px;
   height: 36px;
@@ -874,6 +922,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
@@ -906,6 +955,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .seat-dead-mark {

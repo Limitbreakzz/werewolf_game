@@ -1,6 +1,7 @@
-import React from 'react';
-import { Moon, Users, Zap, DoorOpen, BookOpen } from 'lucide-react';
-import { AVATAR_CRESTS, ROLE_ORDER, FALLBACK_ROLES, RoleIcon } from '../lib/roleIcons.jsx';
+import React, { useRef } from 'react';
+import { Moon, Users, Zap, DoorOpen, BookOpen, Upload, Trash2 } from 'lucide-react';
+import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
+import { compressAvatarFile } from '../lib/imageUtils.js';
 
 export function HomeView({
   playerName,
@@ -13,10 +14,26 @@ export function HomeView({
   onQuickSolo,
   onJoinRoom,
   onOpenRules,
+  onError,
 }) {
+  const fileInputRef = useRef(null);
+  const hasPhoto = typeof avatar === 'string' && avatar.startsWith('data:image/');
+
   const handleJoinSubmit = (e) => {
     e.preventDefault();
     onJoinRoom();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const dataUrl = await compressAvatarFile(file, 128, 0.78);
+      setAvatar(dataUrl);
+    } catch (err) {
+      onError?.(err.message || 'อัปโหลดรูปไม่สำเร็จ');
+    }
   };
 
   return (
@@ -54,6 +71,52 @@ export function HomeView({
           </div>
 
           <div className="panel identity-panel">
+            <div className="profile-upload-row">
+              <button
+                type="button"
+                className="profile-photo-preview"
+                onClick={() => fileInputRef.current?.click()}
+                title="แตะเพื่อเลือกรูปโปรไฟล์"
+                aria-label="เลือกรูปโปรไฟล์"
+              >
+                <PlayerAvatar avatarId={hasPhoto ? avatar : ''} size={28} />
+              </button>
+
+              <div className="profile-upload-meta">
+                <span className="field-label" style={{ marginBottom: 4 }}>รูปโปรไฟล์ของคุณ</span>
+                <p className="subtle" style={{ fontSize: '0.82rem', marginBottom: 10 }}>
+                  เลือกรูปจากมือถือหรือคอมพิวเตอร์ (ไม่ใส่ก็ได้)
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-surface"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={15} />
+                    {hasPhoto ? 'เปลี่ยนรูป' : 'เลือกรูปภาพ'}
+                  </button>
+                  {hasPhoto ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => setAvatar('')}
+                    >
+                      <Trash2 size={15} />
+                      ลบรูป
+                    </button>
+                  ) : null}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="player-name" className="field-label">
                 ชื่อของคุณในหมู่บ้าน
@@ -68,26 +131,6 @@ export function HomeView({
                 onChange={(e) => setPlayerName(e.target.value)}
                 autoComplete="off"
               />
-            </div>
-
-            <div>
-              <span className="field-label">ตราสัญลักษณ์ประจำตัว</span>
-              <div className="avatar-grid" role="radiogroup" aria-label="เลือกตราสัญลักษณ์ประจำตัว">
-                {AVATAR_CRESTS.map(({ id, label, Icon }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="radio"
-                    aria-checked={avatar === id}
-                    aria-label={label}
-                    title={label}
-                    className={`avatar-btn ${avatar === id ? 'selected' : ''}`}
-                    onClick={() => setAvatar(id)}
-                  >
-                    <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </section>
