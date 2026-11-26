@@ -271,6 +271,14 @@ export function App() {
           onLeave={handleLeave}
           onToggleReady={() => {
             soundFX.playClick();
+            setRoom((curr) =>
+              curr
+                ? {
+                    ...curr,
+                    players: curr.players.map((p) => (p.id === curr.myId ? { ...p, ready: !p.ready } : p)),
+                  }
+                : curr
+            );
             socket.emit('toggle_ready');
           }}
           onAddBot={() => {
@@ -292,6 +300,21 @@ export function App() {
               pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
               return;
             }
+            // Instant optimistic UI update so clicks feel 0ms responsive
+            setRoom((curr) =>
+              curr
+                ? {
+                    ...curr,
+                    settings: {
+                      ...curr.settings,
+                      ...partial,
+                      roleConfig: partial.roleConfig
+                        ? { ...curr.settings.roleConfig, ...partial.roleConfig }
+                        : curr.settings.roleConfig,
+                    },
+                  }
+                : curr
+            );
             socket.emit('update_settings', partial, (res) => {
               if (!res?.ok) {
                 pushToast(res?.error || 'เปลี่ยนการตั้งค่าไม่สำเร็จ (เฉพาะหัวหน้าห้อง)', 'error');
