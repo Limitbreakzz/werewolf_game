@@ -90,16 +90,6 @@ export function LobbyView({
                 <Copy size={15} />
                 คัดลอกลิงก์ชวนเพื่อน
               </button>
-              {!isHost && me ? (
-                <button
-                  type="button"
-                  className={`btn btn-sm ${me.ready ? 'btn-sage' : 'btn-brass'}`}
-                  onClick={onToggleReady}
-                >
-                  {me.ready ? <CheckCircle2 size={15} /> : <Circle size={15} />}
-                  {me.ready ? 'พร้อมแล้ว' : 'กดพร้อมเล่น'}
-                </button>
-              ) : null}
             </div>
           </div>
         </div>
@@ -115,6 +105,29 @@ export function LobbyView({
           </button>
         </div>
       </header>
+
+      {!isHost && me ? (
+        <div className={`panel lobby-ready-banner ${me.ready ? 'is-ready' : 'not-ready'}`}>
+          <div className="lobby-ready-copy">
+            <div className="lobby-ready-title">
+              {me.ready ? 'คุณพร้อมเล่นแล้ว!' : 'ยังไม่ได้กดพร้อมเล่น'}
+            </div>
+            <div className="lobby-ready-sub">
+              {me.ready
+                ? 'รอหัวหน้าห้องกดเริ่มเกม (แตะปุ่มอีกครั้งหากต้องการยกเลิก)'
+                : 'กรุณากดปุ่มด้านขวาเพื่อยืนยันว่าคุณพร้อมเริ่มเกม'}
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`btn btn-lg btn-ready-hero ${me.ready ? 'btn-sage' : 'btn-brass'}`}
+            onClick={onToggleReady}
+          >
+            {me.ready ? <CheckCircle2 size={20} strokeWidth={2.2} /> : <Circle size={20} strokeWidth={2.2} />}
+            <span>{me.ready ? 'พร้อมเล่นแล้ว' : 'กดพร้อมเล่น'}</span>
+          </button>
+        </div>
+      ) : null}
 
       <div className="lobby-grid">
         {/* Left: Village Roster & Mode Selector */}
@@ -409,11 +422,21 @@ export function LobbyView({
               <Play size={18} />
               เริ่มคืนหมาป่า
             </button>
-          ) : (
-            <div className="panel-raised" style={{ padding: '12px 14px', textAlign: 'center', fontSize: '0.9rem', color: 'var(--brass)' }}>
-              รอหัวหน้าห้องกดเริ่มเกม...
+          ) : me ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                className={`btn btn-lg btn-full btn-ready-hero ${me.ready ? 'btn-sage' : 'btn-brass'}`}
+                onClick={onToggleReady}
+              >
+                {me.ready ? <CheckCircle2 size={20} strokeWidth={2.2} /> : <Circle size={20} strokeWidth={2.2} />}
+                <span>{me.ready ? 'พร้อมเล่นแล้ว' : 'กดพร้อมเล่น'}</span>
+              </button>
+              <div className="muted" style={{ textAlign: 'center', fontSize: '0.84rem' }}>
+                {me.ready ? 'รอหัวหน้าห้องกดเริ่มเกม...' : 'กดปุ่มด้านบนเพื่อยืนยันความพร้อม'}
+              </div>
             </div>
-          )}
+          ) : null}
         </aside>
       </div>
     </section>
