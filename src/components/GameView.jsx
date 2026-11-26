@@ -95,6 +95,7 @@ export function GameView({
   const [activeChannel, setActiveChannel] = useState('village');
   const [chatText, setChatText] = useState('');
   const [dismissedGameOver, setDismissedGameOver] = useState(false);
+  const [dismissedDawnDay, setDismissedDawnDay] = useState(null);
   const [draftVoteId, setDraftVoteId] = useState(null);
   const [witchDraft, setWitchDraft] = useState({ heal: false, poisonTargetId: null, pickingPoison: false });
   const chatEndRef = useRef(null);
@@ -125,6 +126,7 @@ export function GameView({
     setDraftVoteId(null);
     if (room.phase === 'role_reveal') setRolePeekedOverlay(false);
     if (room.phase !== 'game_over') setDismissedGameOver(false);
+    if (room.phase !== 'dawn') setDismissedDawnDay(null);
 
     if (room.phase === 'night' && isMyNightTurn && me?.role === 'werewolf') {
       setActiveChannel('wolf');
@@ -645,11 +647,11 @@ export function GameView({
       );
     }
 
-    if (room.phase === 'dawn' && room.lastDawnSummary) {
+    if (room.phase === 'dawn' && room.lastDawnSummary && dismissedDawnDay !== room.dayNumber) {
       const deaths = room.lastDawnSummary.deaths || [];
       return (
-        <div className="overlay-backdrop">
-          <div className="panel overlay-card">
+        <div className="overlay-backdrop" onClick={() => setDismissedDawnDay(room.dayNumber)}>
+          <div className="panel overlay-card" onClick={(e) => e.stopPropagation()}>
             <div className="overlay-emblem" style={{ color: deaths.length ? 'var(--crimson)' : 'var(--brass)' }}>
               {deaths.length ? <Skull size={32} /> : <Sunrise size={32} />}
             </div>
@@ -675,6 +677,28 @@ export function GameView({
                 <p className="overlay-copy">ทุกคนลืมตาและเริ่มถกเถียงเพื่อหาตัวหมาป่า</p>
               </>
             )}
+            <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {isMod ? (
+                <button
+                  type="button"
+                  className="btn btn-crimson"
+                  onClick={() => {
+                    setDismissedDawnDay(room.dayNumber);
+                    onModControl('next_step');
+                  }}
+                >
+                  <SkipForward size={16} />
+                  เริ่มสนทนากลางวัน
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="btn btn-surface"
+                onClick={() => setDismissedDawnDay(room.dayNumber)}
+              >
+                ปิดหน้าต่างนี้
+              </button>
+            </div>
           </div>
         </div>
       );
