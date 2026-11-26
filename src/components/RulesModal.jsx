@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, BookOpen } from 'lucide-react';
-import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, getRoleImage } from '../lib/roleIcons.jsx';
+import { ROLE_ORDER, ROLE_CATEGORIES, FALLBACK_ROLES, RoleIcon, getRoleImage } from '../lib/roleIcons.jsx';
 
 export function RulesModal({ open, onClose, rolesCatalog }) {
+  const [category, setCategory] = useState('all');
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
@@ -41,8 +42,27 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
             </p>
           </div>
 
+          <div className="role-filter-tabs" style={{ marginBottom: 14 }} role="tablist" aria-label="หมวดหมู่บทบาท">
+            {ROLE_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                aria-selected={category === cat.id}
+                className={`role-filter-pill ${category === cat.id ? 'active' : ''}`}
+                onClick={() => setCategory(cat.id)}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           <div className="rules-grid">
-            {ROLE_ORDER.map((id) => {
+            {ROLE_ORDER.filter((id) => {
+              if (category === 'all') return true;
+              const r = catalog[id] || FALLBACK_ROLES[id];
+              return (r?.category || r?.team) === category;
+            }).map((id) => {
               const r = catalog[id] || FALLBACK_ROLES[id];
               const teamCls = r.team === 'werewolf' ? 'crimson' : r.team === 'independent' ? 'brass' : 'sage';
               const teamLabel = r.team === 'werewolf' ? 'ฝ่ายมนุษย์หมาป่า' : r.team === 'independent' ? 'ฝ่ายอิสระ' : 'ฝ่ายชาวบ้าน';

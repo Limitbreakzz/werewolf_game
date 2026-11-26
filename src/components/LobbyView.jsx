@@ -21,7 +21,7 @@ import {
   Save,
   Pencil,
 } from 'lucide-react';
-import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
+import { ROLE_ORDER, ROLE_CATEGORIES, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { QrCodeBox } from './QrCodeBox.jsx';
 
 const DISCUSS_PRESETS = [
@@ -70,6 +70,7 @@ export function LobbyView({
   onTestNarrator,
 }) {
   const [showAllRoles, setShowAllRoles] = useState(false);
+  const [roleCategory, setRoleCategory] = useState('all');
   const [editingRoles, setEditingRoles] = useState(false);
   const [draftRoles, setDraftRoles] = useState(null);
   const isHost = room.hostId === room.myId;
@@ -366,8 +367,26 @@ export function LobbyView({
             </div>
           ) : (
             <div className="deck-expanded-wrap">
+              <div className="role-filter-tabs" role="tablist" aria-label="หมวดหมู่บทบาท">
+                {ROLE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={roleCategory === cat.id}
+                    className={`role-filter-pill ${roleCategory === cat.id ? 'active' : ''}`}
+                    onClick={() => setRoleCategory(cat.id)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
               <div className="deck-list">
-                {ROLE_ORDER.map((roleId) => {
+                {ROLE_ORDER.filter((roleId) => {
+                  if (roleCategory === 'all') return true;
+                  const r = catalog[roleId] || FALLBACK_ROLES[roleId];
+                  return (r?.category || r?.team) === roleCategory;
+                }).map((roleId) => {
                   const r = catalog[roleId] || FALLBACK_ROLES[roleId];
                   const count = Number(roleConfig[roleId]) || 0;
                   const editable = isHost && editingRoles;

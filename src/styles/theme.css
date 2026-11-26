@@ -1883,3 +1883,36 @@ body {
   color: var(--brass);
   font-size: 0.78rem;
 }
+
+/* Role Category Filter Pills (Lobby & RulesModal) */
+.role-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.role-filter-pill {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-inset);
+  color: var(--ink-secondary);
+  font-size: 0.79rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.role-filter-pill:hover {
+  color: var(--ink);
+  border-color: var(--brass);
+}
+
+.role-filter-pill.active {
+  background: rgba(214, 163, 84, 0.18);
+  border-color: var(--brass);
+  color: var(--brass);
+  font-weight: 700;
+}

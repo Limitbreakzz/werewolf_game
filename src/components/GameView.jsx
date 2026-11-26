@@ -104,6 +104,7 @@ export function GameView({
   const [dismissedDawnDay, setDismissedDawnDay] = useState(null);
   const [draftVoteId, setDraftVoteId] = useState(null);
   const [witchDraft, setWitchDraft] = useState({ heal: false, poisonTargetId: null, pickingPoison: false });
+  const [pairDraft, setPairDraft] = useState([]);
   const chatEndRef = useRef(null);
   const prevNightTurnRef = useRef(false);
 
@@ -129,6 +130,7 @@ export function GameView({
 
   useEffect(() => {
     setWitchDraft({ heal: false, poisonTargetId: null, pickingPoison: false });
+    setPairDraft([]);
     setDraftVoteId(null);
     if (room.phase === 'role_reveal') setRolePeekedOverlay(false);
     if (room.phase !== 'game_over') setDismissedGameOver(false);
@@ -191,13 +193,27 @@ export function GameView({
       if (isPackWolf(me.role)) return !isPackWolf(target.role);
       if (me.role === 'sorcerer') return !room.privateData?.sorcererInspectedTonight && target.id !== me.id;
       if (me.role === 'seer') return !room.privateData?.seerInspectedTonight && target.id !== me.id;
-      if (me.role === 'doctor') return room.privateData?.doctorLastProtected !== target.id;
+      if (me.role === 'mystic_seer') return !room.privateData?.mysticInspectedTonight && target.id !== me.id;
+      if (me.role === 'aura_seer') return !room.privateData?.auraInspectedTonight && target.id !== me.id;
+      if (me.role === 'pi') return !room.privateData?.piUsed && !room.privateData?.nightStepDone;
+      if (me.role === 'mentalist') return !room.privateData?.mentalistResultTonight;
+      if (me.role === 'doctor') return target.id !== me.id && room.privateData?.doctorLastProtected !== target.id;
+      if (me.role === 'priest') return !room.privateData?.nightStepDone;
+      if (me.role === 'cupid') return !room.privateData?.nightStepDone;
+      if (me.role === 'doppelganger') return !room.privateData?.nightStepDone && target.id !== me.id;
+      if (me.role === 'hoodlum') return !room.privateData?.nightStepDone && target.id !== me.id;
+      if (me.role === 'vampire') return target.id !== me.id && target.role !== 'vampire';
+      if (me.role === 'cult_leader') return target.id !== me.id;
+      if (me.role === 'revealer') return !room.privateData?.nightStepDone && target.id !== me.id;
+      if (me.role === 'huntress') return !room.privateData?.nightStepDone && target.id !== me.id;
+      if (me.role === 'spellcaster') return target.id !== me.id;
+      if (me.role === 'old_hag') return target.id !== me.id;
       if (me.role === 'witch') {
         return !room.privateData?.witchDoneTonight && witchDraft.pickingPoison && target.id !== me.id;
       }
     }
     if (room.phase === 'day_vote') {
-      return target.id !== me.id;
+      return target.id !== me.id && !target.exiled && !me.exiled;
     }
     return false;
   };
@@ -208,8 +224,30 @@ export function GameView({
       if (isPackWolf(me.role)) onNightAction({ type: 'wolf_vote', targetId: target.id });
       else if (me.role === 'sorcerer') onNightAction({ type: 'sorcerer_inspect', targetId: target.id });
       else if (me.role === 'seer') onNightAction({ type: 'seer_inspect', targetId: target.id });
+      else if (me.role === 'mystic_seer') onNightAction({ type: 'mystic_inspect', targetId: target.id });
+      else if (me.role === 'aura_seer') onNightAction({ type: 'aura_inspect', targetId: target.id });
+      else if (me.role === 'pi') onNightAction({ type: 'pi_inspect', targetId: target.id });
       else if (me.role === 'doctor') onNightAction({ type: 'doctor_protect', targetId: target.id });
-      else if (me.role === 'witch') {
+      else if (me.role === 'priest') onNightAction({ type: 'priest_bless', targetId: target.id });
+      else if (me.role === 'doppelganger') onNightAction({ type: 'doppelganger_pick', targetId: target.id });
+      else if (me.role === 'vampire') onNightAction({ type: 'vampire_bite', targetId: target.id });
+      else if (me.role === 'cult_leader') onNightAction({ type: 'cult_recruit', targetId: target.id });
+      else if (me.role === 'revealer') onNightAction({ type: 'revealer_action', targetId: target.id });
+      else if (me.role === 'huntress') onNightAction({ type: 'huntress_action', targetId: target.id });
+      else if (me.role === 'spellcaster') onNightAction({ type: 'spellcaster_silence', targetId: target.id });
+      else if (me.role === 'old_hag') onNightAction({ type: 'old_hag_exile', targetId: target.id });
+      else if (['cupid', 'hoodlum', 'mentalist'].includes(me.role)) {
+        setPairDraft((prev) => {
+          const exists = prev.includes(target.id);
+          const next = exists ? prev.filter((id) => id !== target.id) : [...prev, target.id].slice(-2);
+          if (next.length === 2) {
+            const typeMap = { cupid: 'cupid_pair', hoodlum: 'hoodlum_pick', mentalist: 'mentalist_inspect' };
+            onNightAction({ type: typeMap[me.role], targetIds: next });
+            return [];
+          }
+          return next;
+        });
+      } else if (me.role === 'witch') {
         setWitchDraft((prev) => ({ ...prev, poisonTargetId: target.id, pickingPoison: false }));
       }
     } else if (room.phase === 'day_vote') {
@@ -398,6 +436,15 @@ export function GameView({
                   </span>
                 );
               })}
+              {me.role === 'alpha_wolf' && room.privateData?.alphaCanConvert ? (
+                <button
+                  type="button"
+                  className={`btn btn-xs ${room.privateData?.alphaConvertActive ? 'btn-crimson' : 'btn-surface'}`}
+                  onClick={() => onNightAction({ type: 'alpha_toggle' })}
+                >
+                  {room.privateData?.alphaConvertActive ? 'กำลังแปลงเหยื่อเป็นหมาป่า (เปิดอยู่)' : 'ใช้พลังจ่าฝูง: แปลงเหยื่อเป็นหมาป่า'}
+                </button>
+              ) : null}
             </div>
           </div>
         );
@@ -513,6 +560,75 @@ export function GameView({
                 {witchDraft.heal || witchDraft.poisonTargetId ? 'ยืนยันการใช้ยา' : 'ข้ามคืนนี้'}
               </button>
             </div>
+          </>
+        );
+      }
+      // Extended night roles action strips
+      const roleMeta = catalog[me.role] || FALLBACK_ROLES[me.role];
+      const nightSkipMap = {
+        pi: 'pi_inspect',
+        priest: 'priest_bless',
+        revealer: 'revealer_action',
+        huntress: 'huntress_action',
+      };
+      if (me.role === 'troublemaker') {
+        return (
+          <>
+            <div className="action-strip-msg">
+              <RoleIcon roleId="troublemaker" size={18} />
+              <span>
+                {room.privateData?.nightStepDone
+                  ? 'บันทึกคำสั่งตัวป่วนเรียบร้อยแล้ว'
+                  : 'ตัวป่วนตื่นขึ้น — จะป่วนให้พรุ่งนี้โหวตประหาร 2 รอบหรือไม่? (ใช้ได้ 1 ครั้ง/เกม)'}
+              </span>
+            </div>
+            {!room.privateData?.nightStepDone ? (
+              <div className="action-strip-btns">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-crimson"
+                  onClick={() => onNightAction({ type: 'troublemaker_action', activate: true })}
+                >
+                  ป่วนเลย! (โหวต 2 รอบพรุ่งนี้)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-surface"
+                  onClick={() => onNightAction({ type: 'troublemaker_action', activate: false })}
+                >
+                  ข้ามคืนนี้
+                </button>
+              </div>
+            ) : null}
+          </>
+        );
+      }
+      if (roleMeta) {
+        const isPairRole = ['cupid', 'hoodlum', 'mentalist'].includes(me.role);
+        const canSkip = Boolean(nightSkipMap[me.role]) && !room.privateData?.nightStepDone;
+        return (
+          <>
+            <div className="action-strip-msg">
+              <RoleIcon roleId={me.role} size={18} />
+              <span>
+                {room.privateData?.nightStepDone
+                  ? `บันทึกคำสั่ง${roleMeta.nameTh}เรียบร้อยแล้ว กรุณาหลับตา`
+                  : isPairRole
+                  ? `${roleMeta.nameTh}ตื่นขึ้น — แตะเลือกผู้เล่น 2 คนด้านล่าง (เลือกแล้ว ${pairDraft.length}/2)`
+                  : `${roleMeta.nameTh}ตื่นขึ้น — แตะเลือกผู้เล่น 1 คนด้านล่างเพื่อใช้ความสามารถ`}
+              </span>
+            </div>
+            {canSkip ? (
+              <div className="action-strip-btns">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-surface"
+                  onClick={() => onNightAction({ type: nightSkipMap[me.role], skip: true })}
+                >
+                  ข้ามคืนนี้ (เก็บพลังไว้ใช้คืนอื่น)
+                </button>
+              </div>
+            ) : null}
           </>
         );
       }
@@ -797,27 +913,44 @@ export function GameView({
 
     if (room.phase === 'game_over' && !dismissedGameOver) {
       const isVillage = room.winner === 'village';
-      const isTanner = room.winner === 'tanner';
+      const isIndependent = ['tanner', 'cult_leader', 'vampire', 'lone_wolf'].includes(room.winner);
+      const winHeading =
+        room.winner === 'village'
+          ? 'ฝ่ายชาวบ้านเป็นฝ่ายชนะ'
+          : room.winner === 'tanner'
+          ? `ยาจก / คนคลั่ง (${room.winnerPlayerName || 'Tanner'}) ชนะคนเดียว!`
+          : room.winner === 'cult_leader'
+          ? `เจ้าลัทธิ (${room.winnerPlayerName || 'Cult Leader'}) ชนะคนเดียว!`
+          : room.winner === 'vampire'
+          ? `แวมไพร์ (${room.winnerPlayerName || 'Vampire'}) เป็นฝ่ายชนะ!`
+          : room.winner === 'lone_wolf'
+          ? `มนุษย์หมาป่าเดียวดาย (${room.winnerPlayerName || 'Lone Wolf'}) ชนะคนเดียว!`
+          : 'ฝ่ายมนุษย์หมาป่าเป็นฝ่ายชนะ';
       return (
         <div className="overlay-backdrop">
           <div className="panel overlay-card">
-            <div className="overlay-emblem" style={{ color: isVillage ? 'var(--sage)' : isTanner ? 'var(--brass)' : 'var(--crimson)' }}>
-              {isVillage ? <Trophy size={32} /> : isTanner ? <Skull size={32} /> : <WolfCrestIcon size={32} />}
+            <div className="overlay-emblem" style={{ color: isVillage ? 'var(--sage)' : isIndependent ? 'var(--brass)' : 'var(--crimson)' }}>
+              {isVillage ? <Trophy size={32} /> : isIndependent ? <Skull size={32} /> : <WolfCrestIcon size={32} />}
             </div>
-            <h2 className="overlay-heading" style={{ color: isVillage ? '#7ee3b8' : isTanner ? '#e5b76b' : '#f49b9b' }}>
-              {isVillage
-                ? 'ฝ่ายชาวบ้านเป็นฝ่ายชนะ'
-                : isTanner
-                ? `คนคลั่ง (${room.winnerPlayerName || 'Tanner'}) ชนะคนเดียว!`
-                : 'ฝ่ายมนุษย์หมาป่าเป็นฝ่ายชนะ'}
+            <h2 className="overlay-heading" style={{ color: isVillage ? '#7ee3b8' : isIndependent ? '#e5b76b' : '#f49b9b' }}>
+              {winHeading}
             </h2>
-            <p className="overlay-copy" style={{ marginBottom: 22 }}>
+            <p className="overlay-copy" style={{ marginBottom: room.winnerBonus ? 8 : 22 }}>
               {isVillage
                 ? 'มนุษย์หมาป่าทั้งหมดถูกกำจัดออกจากหมู่บ้านแล้ว ความสงบสุขกลับคืนมา'
-                : isTanner
-                ? 'คนคลั่งหลอกให้หมู่บ้านโหวตประหารตัวเองได้สำเร็จ!'
+                : room.winner === 'tanner'
+                ? 'ยาจกหลอกให้หมู่บ้านโหวตประหารตัวเองได้สำเร็จ!'
+                : room.winner === 'cult_leader'
+                ? 'ผู้รอดชีวิตทุกคนในหมู่บ้านเข้าร่วมลัทธิครบแล้ว!'
+                : room.winner === 'vampire'
+                ? 'แวมไพร์กลืนกินหมู่บ้านได้สำเร็จ!'
                 : 'ฝูงมนุษย์หมาป่ากลืนกินหมู่บ้านได้สำเร็จ'}
             </p>
+            {room.winnerBonus ? (
+              <p className="overlay-copy" style={{ color: 'var(--brass)', marginBottom: 18 }}>
+                {room.winnerBonus}
+              </p>
+            ) : null}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-surface" onClick={() => setDismissedGameOver(true)}>
                 ดูบทบาททั้งหมด
@@ -1072,6 +1205,24 @@ export function GameView({
                           <span className="tag-pill">
                             <ShieldAlert size={11} />
                             เพิ่งปกป้อง
+                          </span>
+                        ) : null}
+                        {p.silenced ? <span className="tag-pill crimson">ถูกปิดปาก</span> : null}
+                        {p.exiled ? <span className="tag-pill brass">ถูกไล่ออกวันนี้</span> : null}
+                        {room.privateData?.loverPartnerId === p.id ? <span className="tag-pill crimson">คู่รักของคุณ</span> : null}
+                        {room.privateData?.cultMemberIds?.includes(p.id) && p.id !== room.myId ? (
+                          <span className="tag-pill brass">สาวกลัทธิ</span>
+                        ) : null}
+                        {room.privateData?.mysticResults?.[p.id] ? (
+                          <span className="tag-pill brass">
+                            <Eye size={11} />
+                            {(catalog[room.privateData.mysticResults[p.id]] || FALLBACK_ROLES[room.privateData.mysticResults[p.id]])?.nameTh || room.privateData.mysticResults[p.id]}
+                          </span>
+                        ) : null}
+                        {room.privateData?.auraResults?.[p.id] !== undefined ? (
+                          <span className={`tag-pill ${room.privateData.auraResults[p.id] ? 'brass' : ''}`}>
+                            <Eye size={11} />
+                            {room.privateData.auraResults[p.id] ? 'มีพลังพิเศษ' : 'บทบาทธรรมดา'}
                           </span>
                         ) : null}
                         {!p.alive && causeLabel ? <span className="tag-pill">{causeLabel}</span> : null}

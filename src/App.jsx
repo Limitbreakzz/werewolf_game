@@ -361,6 +361,8 @@ export function App() {
           `ผลส่อง ${targetName}: ${isSeer ? 'คือเทพพยากรณ์!' : 'ไม่ใช่เทพพยากรณ์'}`,
           isSeer ? 'success' : 'info'
         );
+      } else if (res?.ok && res.customToast) {
+        pushToast(res.customToast, 'info');
       } else if (!res?.ok && res?.error) {
         pushToast(res.error, 'error');
       }
