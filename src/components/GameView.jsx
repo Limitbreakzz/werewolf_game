@@ -29,7 +29,7 @@ import {
   ShieldCheck,
   Vibrate,
 } from 'lucide-react';
-import { FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon, getRoleImage, isPackWolf } from '../lib/roleIcons.jsx';
+import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar, WolfCrestIcon, getRoleImage, isPackWolf } from '../lib/roleIcons.jsx';
 import { vibrateDevice } from '../lib/feedback.js';
 import { PhaseTimer } from './PhaseTimer.jsx';
 
@@ -891,6 +891,37 @@ export function GameView({
       </header>
 
       {renderModeratorControlBar()}
+
+      {/* Active Roles in This Match */}
+      {(() => {
+        const counts = room.activeRoleCounts || room.settings?.roleConfig || {};
+        const activeRoles = ROLE_ORDER.filter((id) => (Number(counts[id]) || 0) > 0);
+        if (activeRoles.length === 0) return null;
+        return (
+          <div className="panel match-roles-bar" aria-label="บทบาททั้งหมดในเกมนี้">
+            <span className="match-roles-label">บทบาทในเกมนี้:</span>
+            <div className="match-roles-chips">
+              {activeRoles.map((roleId) => {
+                const r = catalog[roleId] || FALLBACK_ROLES[roleId];
+                const cnt = Number(counts[roleId]) || 0;
+                return (
+                  <span
+                    key={roleId}
+                    className="match-role-chip"
+                    title={`${r.nameTh} (${r.nameEn}): ${r.shortDesc || r.description || ''}`}
+                  >
+                    <span style={{ color: r.color || 'var(--brass)', display: 'inline-flex', flexShrink: 0 }}>
+                      <RoleIcon roleId={roleId} size={13} />
+                    </span>
+                    <span>{r.nameTh}</span>
+                    <span className="match-role-count tabular">×{cnt}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Main Layout */}
       <div className="game-grid">
