@@ -424,7 +424,7 @@ export function GameView({
             <Eye size={18} color="var(--seer)" />
             <span>
               {res && t
-                ? `ผลการตรวจสอบ #${padSeat(t.seatNumber)} ${t.name}: ${res.team === 'werewolf' ? 'เป็นฝ่ายหมาป่า!' : 'เป็นฝ่ายชาวบ้าน'}`
+                ? `ผลการตรวจสอบ #${padSeat(t.seatNumber)} ${t.name}: ${res.team === 'werewolf' ? 'คนไม่ดี!' : 'คนดี'}`
                 : 'เทพพยากรณ์ตื่นขึ้น — เลือกตรวจสอบผู้เล่น 1 คน'}
             </span>
           </div>
@@ -1059,7 +1059,7 @@ export function GameView({
                         {seerKnown ? (
                           <span className={`tag-pill ${seerKnown === 'werewolf' ? 'crimson' : 'sage'}`}>
                             <Eye size={11} />
-                            {seerKnown === 'werewolf' ? 'มนุษย์หมาป่า' : 'ชาวบ้าน'}
+                            {seerKnown === 'werewolf' ? 'คนไม่ดี' : 'คนดี'}
                           </span>
                         ) : null}
                         {sorcKnown !== undefined ? (

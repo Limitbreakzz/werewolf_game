@@ -352,7 +352,7 @@ export function App() {
       if (res?.ok && res.result) {
         const isWolf = res.result.team === 'werewolf';
         pushToast(
-          `ผลตรวจสอบ ${res.result.targetName}: ${isWolf ? 'ฝ่ายมนุษย์หมาป่า!' : 'ฝ่ายชาวบ้าน'}`,
+          `ผลตรวจสอบ ${res.result.targetName}: ${isWolf ? 'คนไม่ดี!' : 'คนดี'}`,
           isWolf ? 'error' : 'success'
         );
       } else if (res?.ok && res.sorcererResult) {
