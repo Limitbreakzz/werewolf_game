@@ -161,15 +161,18 @@ export function GameView({
     return map;
   }, [room.phase, room.dayVotes]);
 
-  const wolfCounts = useMemo(() => {
+  const wolfVotersByTarget = useMemo(() => {
     const map = {};
     if (room.phase === 'night' && room.privateData?.wolfVotes) {
-      for (const tid of Object.values(room.privateData.wolfVotes)) {
-        map[tid] = (map[tid] || 0) + 1;
+      for (const [voterId, tid] of Object.entries(room.privateData.wolfVotes)) {
+        if (!tid) continue;
+        const voter = gamePlayers.find((p) => p.id === voterId);
+        if (!map[tid]) map[tid] = [];
+        map[tid].push(voter ? (voter.id === room.myId ? 'คุณ' : voter.name) : 'หมาป่า');
       }
     }
     return map;
-  }, [room.phase, room.privateData?.wolfVotes]);
+  }, [room.phase, room.privateData?.wolfVotes, gamePlayers, room.myId]);
 
   const canTarget = (target) => {
     if (!me || isMod || !target.alive || target.isModerator) return false;
@@ -352,17 +355,40 @@ export function GameView({
 
     if (room.phase === 'night' && isMyNightTurn) {
       if (isPackWolf(me.role)) {
-        const myVote = room.privateData?.wolfVotes?.[me.id];
-        const target = gamePlayers.find((p) => p.id === myVote);
-        const dbl = room.privateData?.doubleKillTonight ? ' (คืนนี้ล่าได้ 2 คน!)' : '';
+        const aliveWolves = gamePlayers.filter((p) => p.alive && isPackWolf(p.role));
+        const votesMap = room.privateData?.wolfVotes || {};
+        const votedIds = aliveWolves.map((w) => votesMap[w.id]).filter(Boolean);
+        const uniqueTargets = [...new Set(votedIds)];
+        const isUnanimous = aliveWolves.length > 0 && votedIds.length === aliveWolves.length && uniqueTargets.length === 1;
+        const agreedPlayer = isUnanimous ? gamePlayers.find((p) => p.id === uniqueTargets[0]) : null;
+        const hasDisagreement = uniqueTargets.length > 1 && !room.privateData?.doubleKillTonight;
+
         return (
-          <div className="action-strip-msg">
-            <WolfCrestIcon size={18} />
-            <span>
-              {target
-                ? `มนุษย์หมาป่าเลือกเหยื่อ #${padSeat(target.seatNumber)} ${target.name} แล้ว${dbl}`
-                : `มนุษย์หมาป่าตื่นขึ้น — เลือกผู้เล่นที่ต้องการกำจัดในคืนนี้${dbl}`}
-            </span>
+          <div className="wolf-vote-banner">
+            <div className="action-strip-msg">
+              <WolfCrestIcon size={18} />
+              <span>
+                {room.privateData?.doubleKillTonight
+                  ? 'คืนนี้ฝูงหมาป่าล่าได้ 2 คน — เลือกเป้าหมายด้านล่าง'
+                  : isUnanimous && agreedPlayer
+                  ? `มติฝูงหมาป่าตรงกันแล้ว! เป้าหมายคืนนี้คือ #${padSeat(agreedPlayer.seatNumber)} ${agreedPlayer.name}`
+                  : hasDisagreement
+                  ? 'เสียงหมาป่ายังไม่ตรงกัน! ต้องโหวตคนเดียวกันทุกคนเหยื่อจึงจะตาย'
+                  : 'มนุษย์หมาป่าตื่นขึ้น — ต้องโหวตเลือกคนเดียวกันทุกคนเหยื่อจึงจะตาย'}
+              </span>
+            </div>
+            <div className="wolf-vote-summary">
+              {aliveWolves.map((w) => {
+                const tid = votesMap[w.id];
+                const tPlayer = tid ? gamePlayers.find((p) => p.id === tid) : null;
+                const wLabel = w.id === me.id ? 'คุณ' : w.name;
+                return (
+                  <span key={w.id} className={`tag-pill ${tPlayer ? (isUnanimous ? 'sage' : 'crimson') : ''}`}>
+                    {wLabel}: {tPlayer ? `#${padSeat(tPlayer.seatNumber)} ${tPlayer.name}` : 'ยังไม่เลือก'}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         );
       }
@@ -885,10 +911,10 @@ export function GameView({
                         </span>
                       ) : null}
 
-                      {wolfCounts[p.id] ? (
-                        <span className="seat-wolf-counter tabular">
+                      {wolfVotersByTarget[p.id]?.length ? (
+                        <span className="seat-wolf-counter tabular" title={`หมาป่าที่เลือก: ${wolfVotersByTarget[p.id].join(', ')}`}>
                           <WolfCrestIcon size={12} />
-                          {wolfCounts[p.id]}
+                          {wolfVotersByTarget[p.id].length}
                         </span>
                       ) : null}
 
@@ -920,6 +946,11 @@ export function GameView({
                       ) : null}
 
                       <div className="seat-card-badges">
+                        {wolfVotersByTarget[p.id]?.length ? (
+                          <span className="tag-pill crimson">
+                            เลือกโดย: {wolfVotersByTarget[p.id].join(', ')}
+                          </span>
+                        ) : null}
                         {p.id === room.myId ? <span className="tag-pill brass">คุณ</span> : null}
                         {p.isBot ? <span className="tag-pill">AI</span> : null}
                         {modDone ? <span className="tag-pill sage">ทำคำสั่งแล้ว</span> : null}
