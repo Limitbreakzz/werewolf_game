@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { socket } from './lib/socket.js';
 import { soundFX } from './lib/sound.js';
-import { speakThai, NARRATOR_SCRIPTS } from './lib/feedback.js';
+import { speakThai, unlockSpeech, NARRATOR_SCRIPTS, NARRATOR_SLEEP } from './lib/feedback.js';
 import { AVATARS } from './lib/roleIcons.jsx';
 import { HomeView } from './components/HomeView.jsx';
 import { LobbyView } from './components/LobbyView.jsx';
@@ -69,13 +69,13 @@ export function App() {
 
         if (nextRoom.phase === 'night') {
           soundFX.playNight();
-          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.night_start);
+          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.night_start, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'dawn') {
           if (nextRoom.lastDawnSummary?.deaths?.length > 0) soundFX.playDeath();
           else soundFX.playDawn();
-          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.dawn);
+          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.dawn, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'day_vote') {
-          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.day_vote);
+          if (isHostNarrator) speakThai(NARRATOR_SCRIPTS.day_vote, { interrupt: true, muted: soundFX.muted });
         } else if (nextRoom.phase === 'game_over') {
           soundFX.playWin(nextRoom.winner === 'village');
         }
@@ -85,7 +85,14 @@ export function App() {
       // Voice Narrator announces sequential role steps on Host device only
       if (isHostNarrator && nextRoom.phase === 'night' && visibleStep && visibleStep !== prevStep) {
         if (NARRATOR_SCRIPTS[visibleStep]) {
-          setTimeout(() => speakThai(NARRATOR_SCRIPTS[visibleStep]), prevPhase !== 'night' ? 2400 : 300);
+          const sleepPrefix = prevStep && NARRATOR_SLEEP[prevStep] ? `${NARRATOR_SLEEP[prevStep]} ... ` : '';
+          const phrase = `${sleepPrefix}${NARRATOR_SCRIPTS[visibleStep]}`;
+          if (prevPhase !== 'night') {
+            // Queue smoothly right after "เข้าสู่ช่วงกลางคืน ทุกคนหยุดพูดและหลับตา"
+            speakThai(phrase, { interrupt: false, muted: soundFX.muted });
+          } else {
+            speakThai(phrase, { interrupt: true, muted: soundFX.muted });
+          }
         }
       }
       prevNightStepRef.current = visibleStep;
@@ -297,6 +304,7 @@ export function App() {
           onKickPlayer={(targetId) => socket.emit('kick_player', { targetId })}
           onUpdateSettings={(partial) => {
             soundFX.playClick();
+            if (partial.controlMode === 'narrator') unlockSpeech();
             if (!socket.connected) {
               pushToast('กำลังเชื่อมต่อเซิร์ฟเวอร์ใหม่ กรุณารอสักครู่...', 'error');
               return;
@@ -324,9 +332,17 @@ export function App() {
           }}
           onStartGame={() => {
             soundFX.playClick();
+            unlockSpeech();
             socket.emit('start_game', {}, (res) => {
               if (!res?.ok && res?.error) pushToast(res.error, 'error');
             });
+          }}
+          onTestNarrator={() => {
+            unlockSpeech();
+            const ok = speakThai(NARRATOR_SCRIPTS.test, { interrupt: true, muted: false });
+            if (!ok) {
+              pushToast('เบราว์เซอร์นี้ไม่รองรับเสียงบรรยายภาษาไทย (Web Speech API)', 'error');
+            }
           }}
         />
       ) : (

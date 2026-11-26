@@ -63,6 +63,7 @@ export function LobbyView({
   onKickPlayer,
   onUpdateSettings,
   onStartGame,
+  onTestNarrator,
 }) {
   const isHost = room.hostId === room.myId;
   const me = room.players.find((p) => p.id === room.myId);
@@ -207,7 +208,14 @@ export function LobbyView({
           <div className="panel lobby-panel">
             <div className="panel-header" style={{ marginBottom: 12 }}>
               <h2>รูปแบบการคุมเกมช่วงกลางคืน</h2>
-              {!isHost ? <span className="tag-pill">เฉพาะหัวหน้าห้องเลือกได้</span> : null}
+              {!isHost ? (
+                <span className="tag-pill">เฉพาะหัวหน้าห้องเลือกได้</span>
+              ) : room.settings.controlMode === 'narrator' ? (
+                <button type="button" className="btn btn-xs btn-surface" onClick={onTestNarrator}>
+                  <Volume2 size={14} />
+                  ทดสอบเสียงบรรยาย
+                </button>
+              ) : null}
             </div>
             <div className="mode-list" role="radiogroup" aria-label="รูปแบบการคุมเกมช่วงกลางคืน">
               {CONTROL_MODES.map((m) => {
