@@ -232,7 +232,10 @@ export function LobbyView({
                     aria-checked={active}
                     disabled={!isHost}
                     className={`mode-option ${active ? 'selected' : ''}`}
-                    onClick={() => onUpdateSettings({ controlMode: m.id })}
+                    onClick={() => {
+                      if (!isHost) return;
+                      onUpdateSettings({ controlMode: m.id });
+                    }}
                   >
                     <div className="mode-option-icon">
                       <Icon size={18} strokeWidth={1.75} />
@@ -255,17 +258,23 @@ export function LobbyView({
               <SlidersHorizontal size={18} strokeWidth={1.75} />
               จัดชุดบทบาทและเวลา
             </h2>
+            {!isHost ? <span className="tag-pill">เฉพาะหัวหน้าห้องตั้งค่าได้</span> : null}
           </div>
 
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={room.settings.autoRoles}
-              disabled={!isHost}
-              onChange={(e) => onUpdateSettings({ autoRoles: e.target.checked })}
-            />
-            <span>จัดสมดุลบทบาทอัตโนมัติ ({activeCount} ผู้เล่น)</span>
-          </label>
+          {isHost ? (
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={room.settings.autoRoles}
+                onChange={(e) => onUpdateSettings({ autoRoles: e.target.checked })}
+              />
+              <span>จัดสมดุลบทบาทอัตโนมัติ ({activeCount} ผู้เล่น)</span>
+            </label>
+          ) : (
+            <div className="muted" style={{ fontSize: '0.85rem' }}>
+              {room.settings.autoRoles ? `จัดสมดุลบทบาทอัตโนมัติ (${activeCount} ผู้เล่น)` : 'หัวหน้าห้องกำลังจัดบทบาทเอง'}
+            </div>
+          )}
 
           {room.settings.autoRoles && !showAllRoles ? (
             <div className="deck-compact-wrap">
@@ -317,25 +326,29 @@ export function LobbyView({
                           </div>
                         </div>
                       </div>
-                      <div className="stepper">
-                        <button
-                          type="button"
-                          disabled={!editable || count <= 0}
-                          onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.max(0, count - 1) } })}
-                          aria-label={`ลดจำนวน${r.nameTh}`}
-                        >
-                          −
-                        </button>
-                        <span className="tabular">{count}</span>
-                        <button
-                          type="button"
-                          disabled={!editable || count >= 8}
-                          onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.min(8, count + 1) } })}
-                          aria-label={`เพิ่มจำนวน${r.nameTh}`}
-                        >
-                          +
-                        </button>
-                      </div>
+                      {isHost ? (
+                        <div className="stepper">
+                          <button
+                            type="button"
+                            disabled={!editable || count <= 0}
+                            onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.max(0, count - 1) } })}
+                            aria-label={`ลดจำนวน${r.nameTh}`}
+                          >
+                            −
+                          </button>
+                          <span className="tabular">{count}</span>
+                          <button
+                            type="button"
+                            disabled={!editable || count >= 8}
+                            onClick={() => onUpdateSettings({ roleConfig: { [roleId]: Math.min(8, count + 1) } })}
+                            aria-label={`เพิ่มจำนวน${r.nameTh}`}
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="deck-summary-count tabular">×{count}</span>
+                      )}
                     </div>
                   );
                 })}
@@ -367,7 +380,10 @@ export function LobbyView({
                     aria-checked={active}
                     disabled={!isHost}
                     className={`time-preset-btn ${active ? 'selected' : ''}`}
-                    onClick={() => onUpdateSettings({ discussSeconds: preset.seconds })}
+                    onClick={() => {
+                      if (!isHost) return;
+                      onUpdateSettings({ discussSeconds: preset.seconds });
+                    }}
                   >
                     <span className="time-preset-val tabular">{preset.label}</span>
                     <span className="time-preset-hint">{preset.hint}</span>

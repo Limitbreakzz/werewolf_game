@@ -325,6 +325,10 @@ export function App() {
           }}
           onKickPlayer={(targetId) => socket.emit('kick_player', { targetId })}
           onUpdateSettings={(partial) => {
+            if (!room || room.hostId !== room.myId) {
+              pushToast('เฉพาะหัวหน้าห้องเท่านั้นที่ปรับการตั้งค่าได้', 'error');
+              return;
+            }
             soundFX.playClick();
             if (partial.controlMode === 'narrator') unlockSpeech();
             if (!socket.connected) {
