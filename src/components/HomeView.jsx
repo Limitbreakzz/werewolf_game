@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Moon, Users, Zap, DoorOpen, BookOpen, Upload, Trash2, RotateCcw, X } from 'lucide-react';
 import { ROLE_ORDER, FALLBACK_ROLES, RoleIcon, PlayerAvatar } from '../lib/roleIcons.jsx';
 import { compressAvatarFile } from '../lib/imageUtils.js';
@@ -54,7 +55,12 @@ export function HomeView({
 
       <div className="home-grid">
         {/* Left Editorial Hero & Identity */}
-        <section className="hero-column">
+        <motion.section
+          className="hero-column"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        >
           <div>
             <h1 className="hero-title">คืนหมาป่าแห่งหมู่บ้าน</h1>
             <p className="hero-lead" style={{ marginTop: 12 }}>
@@ -144,10 +150,15 @@ export function HomeView({
               />
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Right Decisive Actions */}
-        <aside className="panel actions-column">
+        <motion.aside
+          className="panel actions-column"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+        >
           {savedSession?.roomCode ? (
             <>
               <div className="action-block" style={{ gap: 10 }}>
@@ -176,14 +187,26 @@ export function HomeView({
           <div className="action-block">
             <h2>เปิดห้องเล่นใหม่</h2>
             <p>สร้างห้องส่วนตัวสำหรับ 4–16 คน เชิญเพื่อนด้วยลิงก์ หรือเติมบอท AI เข้าโต๊ะได้ตามต้องการ</p>
-            <button type="button" className="btn btn-crimson btn-lg btn-full" onClick={onCreateRoom}>
+            <motion.button
+              type="button"
+              className="btn btn-crimson btn-lg btn-full"
+              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onCreateRoom}
+            >
               <Users size={18} />
               สร้างห้องเล่นกับเพื่อน
-            </button>
-            <button type="button" className="btn btn-brass btn-full" onClick={onQuickSolo}>
+            </motion.button>
+            <motion.button
+              type="button"
+              className="btn btn-brass btn-full"
+              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onQuickSolo}
+            >
               <Zap size={17} />
               เล่นด่วนคนเดียวกับบอท AI (7 คน)
-            </button>
+            </motion.button>
           </div>
 
           <div className="divider-line" />
@@ -208,7 +231,7 @@ export function HomeView({
               </button>
             </div>
           </form>
-        </aside>
+        </motion.aside>
       </div>
     </main>
   );

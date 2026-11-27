@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { X, BookOpen } from 'lucide-react';
 import { ROLE_ORDER, ROLE_CATEGORIES, FALLBACK_ROLES, RoleIcon, getRoleImage } from '../lib/roleIcons.jsx';
 
@@ -13,12 +14,30 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
   const catalog = rolesCatalog || FALLBACK_ROLES;
 
   return (
-    <div className="overlay-backdrop" role="dialog" aria-modal="true" aria-label="คู่มือบทบาทและกติกา" onClick={onClose}>
-      <div className="panel modal-panel" onClick={(e) => e.stopPropagation()}>
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          className="overlay-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="คู่มือบทบาทและกติกา"
+          onClick={onClose}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+        >
+          <motion.div
+            className="panel modal-panel"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.94, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+          >
         <div className="modal-header">
           <h2 style={{ fontSize: '1.15rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <BookOpen size={19} strokeWidth={1.75} />
@@ -98,7 +117,9 @@ export function RulesModal({ open, onClose, rolesCatalog }) {
             })}
           </div>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }

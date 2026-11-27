@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Copy,
   BookOpen,
@@ -194,56 +195,66 @@ export function LobbyView({
             </div>
 
             <div className="roster-grid">
-              {room.players.map((p) => {
-                const isMe = p.id === room.myId;
-                const isModHost = isManualMod && p.isHost;
-                return (
-                  <div className={`roster-seat ${isMe ? 'is-me' : ''}`} key={p.id}>
-                    <span className="seat-avatar-badge" aria-hidden="true">
-                      <PlayerAvatar avatarId={p.avatar} size={18} />
-                    </span>
-                    <div className="seat-meta">
-                      <div className="seat-name">
-                        {isModHost ? (
-                          <span className="subtle" style={{ marginRight: 5 }}>[MOD]</span>
-                        ) : (
-                          <span className="subtle tabular" style={{ marginRight: 5 }}>#{padSeat(p.seatNumber)}</span>
-                        )}
-                        {p.name}
+              <AnimatePresence initial={false}>
+                {room.players.map((p) => {
+                  const isMe = p.id === room.myId;
+                  const isModHost = isManualMod && p.isHost;
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.88 }}
+                      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+                      className={`roster-seat ${isMe ? 'is-me' : ''}`}
+                      key={p.id}
+                    >
+                      <span className="seat-avatar-badge" aria-hidden="true">
+                        <PlayerAvatar avatarId={p.avatar} size={18} />
+                      </span>
+                      <div className="seat-meta">
+                        <div className="seat-name">
+                          {isModHost ? (
+                            <span className="subtle" style={{ marginRight: 5 }}>[MOD]</span>
+                          ) : (
+                            <span className="subtle tabular" style={{ marginRight: 5 }}>#{padSeat(p.seatNumber)}</span>
+                          )}
+                          {p.name}
+                        </div>
+                        <div className="seat-tags">
+                          {p.isHost ? (
+                            <span className="tag-pill brass">
+                              <Crown size={11} />
+                              {isModHost ? 'กรรมการ' : 'หัวหน้าห้อง'}
+                            </span>
+                          ) : null}
+                          {p.isBot ? (
+                            <span className="tag-pill">
+                              <Bot size={11} />
+                              AI
+                            </span>
+                          ) : p.ready ? (
+                            <span className="tag-pill sage">พร้อม</span>
+                          ) : (
+                            <span className="tag-pill">รอพร้อม</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="seat-tags">
-                        {p.isHost ? (
-                          <span className="tag-pill brass">
-                            <Crown size={11} />
-                            {isModHost ? 'กรรมการ' : 'หัวหน้าห้อง'}
-                          </span>
-                        ) : null}
-                        {p.isBot ? (
-                          <span className="tag-pill">
-                            <Bot size={11} />
-                            AI
-                          </span>
-                        ) : p.ready ? (
-                          <span className="tag-pill sage">พร้อม</span>
-                        ) : (
-                          <span className="tag-pill">รอพร้อม</span>
-                        )}
-                      </div>
-                    </div>
-                    {isHost && !isMe ? (
-                      <button
-                        type="button"
-                        className="icon-btn"
-                        style={{ width: 28, height: 28 }}
-                        title="นำออกจากห้อง"
-                        onClick={() => (p.isBot ? onRemoveBot(p.id) : onKickPlayer(p.id))}
-                      >
-                        <X size={14} />
-                      </button>
-                    ) : null}
-                  </div>
-                );
-              })}
+                      {isHost && !isMe ? (
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          style={{ width: 28, height: 28 }}
+                          title="นำออกจากห้อง"
+                          onClick={() => (p.isBot ? onRemoveBot(p.id) : onKickPlayer(p.id))}
+                        >
+                          <X size={14} />
+                        </button>
+                      ) : null}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           </div>
 

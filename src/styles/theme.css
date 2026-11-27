@@ -1916,3 +1916,60 @@ body {
   color: var(--brass);
   font-weight: 700;
 }
+
+/* Atmospheric Ambient Orbs & Role Art Shimmer */
+.ambient-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.22;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ambient-orb.orb-1 {
+  width: 340px;
+  height: 340px;
+  top: -80px;
+  left: -90px;
+  background: radial-gradient(circle, rgba(200, 50, 50, 0.55), transparent 70%);
+  animation: orbDriftA 18s ease-in-out infinite;
+}
+
+.ambient-orb.orb-2 {
+  width: 380px;
+  height: 380px;
+  bottom: -110px;
+  right: -90px;
+  background: radial-gradient(circle, rgba(214, 163, 84, 0.42), transparent 70%);
+  animation: orbDriftB 22s ease-in-out infinite;
+}
+
+.ambient-orb.orb-3 {
+  width: 260px;
+  height: 260px;
+  top: 42%;
+  left: 55%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent 70%);
+  animation: orbDriftA 26s ease-in-out infinite reverse;
+}
+
+@keyframes orbDriftA {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(28px, 22px, 0) scale(1.08); }
+}
+
+@keyframes orbDriftB {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-26px, -18px, 0) scale(1.06); }
+}
+
+.role-reveal-art {
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 24px rgba(214, 163, 84, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}

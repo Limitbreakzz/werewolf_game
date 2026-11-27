@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { socket } from './lib/socket.js';
 import { soundFX } from './lib/sound.js';
 import { speakThai, unlockSpeech, NARRATOR_SCRIPTS, NARRATOR_SLEEP } from './lib/feedback.js';
@@ -383,20 +384,44 @@ export function App() {
     socket.emit('mod_control', { action, seconds });
   };
 
-  return (
-    <>
-      <div className="sky-canvas" aria-hidden="true" />
+  const viewKey = !room ? 'home' : room.phase === 'lobby' ? 'lobby' : 'game';
 
-      <div className="toast-stack" aria-live="polite">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast-item ${t.type}`}>
-            {t.text}
-          </div>
-        ))}
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="sky-canvas" aria-hidden="true">
+        <span className="ambient-orb orb-1" />
+        <span className="ambient-orb orb-2" />
+        <span className="ambient-orb orb-3" />
       </div>
 
-      {!room ? (
-        <HomeView
+      <div className="toast-stack" aria-live="polite">
+        <AnimatePresence initial={false}>
+          {toasts.map((t) => (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, y: -18, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              className={`toast-item ${t.type}`}
+            >
+              {t.text}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={viewKey}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {!room ? (
+            <HomeView
           playerName={playerName}
           setPlayerName={setPlayerName}
           avatar={avatar}
@@ -594,8 +619,10 @@ export function App() {
           }}
         />
       )}
+        </motion.div>
+      </AnimatePresence>
 
       <RulesModal open={rulesOpen} onClose={() => setRulesOpen(false)} rolesCatalog={room?.rolesCatalog} />
-    </>
+    </MotionConfig>
   );
 }

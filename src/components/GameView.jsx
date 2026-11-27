@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Moon,
   Sun,
@@ -798,32 +799,66 @@ export function GameView({
     if (room.phase === 'role_reveal' && !isMod && myRoleObj) {
       const isWolf = myRoleObj.team === 'werewolf';
       return (
-        <div className="overlay-backdrop">
-          <div className="panel overlay-card">
+        <motion.div
+          key="overlay-role-reveal"
+          className="overlay-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          style={{ perspective: 1100 }}
+        >
+          <AnimatePresence mode="wait">
             {!rolePeekedOverlay ? (
-              <>
-                <div className="overlay-emblem" style={{ color: 'var(--brass)' }}>
+              <motion.div
+                key="card-back"
+                className="panel overlay-card"
+                initial={{ rotateY: -85, opacity: 0, scale: 0.92 }}
+                animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                exit={{ rotateY: 85, opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <motion.div
+                  className="overlay-emblem"
+                  style={{ color: 'var(--brass)' }}
+                  animate={{ scale: [1, 1.08, 1] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                >
                   <Eye size={30} />
-                </div>
+                </motion.div>
                 <h2 className="overlay-heading">การ์ดบทบาทส่วนตัวของคุณ</h2>
                 <p className="overlay-copy" style={{ marginBottom: 20 }}>
                   ระวังคนข้างๆ แอบดูหน้าจอ แตะปุ่มด้านล่างเมื่อพร้อมเปิดดูบทบาทลับ
                 </p>
-                <button
+                <motion.button
                   type="button"
                   className="btn btn-brass btn-lg btn-full"
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setRolePeekedOverlay(true)}
                 >
                   <Eye size={18} />
                   แตะเพื่อเปิดดูบทบาท
-                </button>
-              </>
+                </motion.button>
+              </motion.div>
             ) : (
-              <>
+              <motion.div
+                key="card-front"
+                className="panel overlay-card"
+                initial={{ rotateY: 85, opacity: 0, scale: 0.92 }}
+                animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                exit={{ rotateY: -85, opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              >
                 {getRoleImage(myRoleObj.id) ? (
-                  <div className="role-reveal-art">
+                  <motion.div
+                    className="role-reveal-art"
+                    initial={{ scale: 0.92, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 22 }}
+                  >
                     <img src={getRoleImage(myRoleObj.id)} alt={myRoleObj.nameTh} />
-                  </div>
+                  </motion.div>
                 ) : (
                   <div className="overlay-emblem" style={{ color: myRoleObj.color || 'var(--brass)' }}>
                     <RoleIcon roleId={myRoleObj.id} size={32} />
@@ -847,18 +882,33 @@ export function GameView({
                   <EyeOff size={16} />
                   ซ่อนการ์ดกลับ (ป้องกันคนแอบดู)
                 </button>
-              </>
+              </motion.div>
             )}
-          </div>
-        </div>
+          </AnimatePresence>
+        </motion.div>
       );
     }
 
     if (room.phase === 'dawn' && room.lastDawnSummary && dismissedDawnDay !== room.dayNumber) {
       const deaths = room.lastDawnSummary.deaths || [];
       return (
-        <div className="overlay-backdrop" onClick={() => setDismissedDawnDay(room.dayNumber)}>
-          <div className="panel overlay-card" onClick={(e) => e.stopPropagation()}>
+        <motion.div
+          key={`overlay-dawn-${room.dayNumber}`}
+          className="overlay-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setDismissedDawnDay(room.dayNumber)}
+        >
+          <motion.div
+            className="panel overlay-card"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 12 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="overlay-emblem" style={{ color: deaths.length ? 'var(--crimson)' : 'var(--brass)' }}>
               {deaths.length ? <Skull size={32} /> : <Sunrise size={32} />}
             </div>
@@ -906,8 +956,8 @@ export function GameView({
                 ปิดหน้าต่างนี้
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       );
     }
 
@@ -927,11 +977,30 @@ export function GameView({
           ? `มนุษย์หมาป่าเดียวดาย (${room.winnerPlayerName || 'Lone Wolf'}) ชนะคนเดียว!`
           : 'ฝ่ายมนุษย์หมาป่าเป็นฝ่ายชนะ';
       return (
-        <div className="overlay-backdrop">
-          <div className="panel overlay-card">
-            <div className="overlay-emblem" style={{ color: isVillage ? 'var(--sage)' : isIndependent ? 'var(--brass)' : 'var(--crimson)' }}>
+        <motion.div
+          key="overlay-game-over"
+          className="overlay-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <motion.div
+            className="panel overlay-card"
+            initial={{ opacity: 0, scale: 0.86, y: 28 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+          >
+            <motion.div
+              className="overlay-emblem"
+              style={{ color: isVillage ? 'var(--sage)' : isIndependent ? 'var(--brass)' : 'var(--crimson)' }}
+              initial={{ scale: 0.5, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.1, type: 'spring', stiffness: 320, damping: 16 }}
+            >
               {isVillage ? <Trophy size={32} /> : isIndependent ? <Skull size={32} /> : <WolfCrestIcon size={32} />}
-            </div>
+            </motion.div>
             <h2 className="overlay-heading" style={{ color: isVillage ? '#7ee3b8' : isIndependent ? '#e5b76b' : '#f49b9b' }}>
               {winHeading}
             </h2>
@@ -962,8 +1031,8 @@ export function GameView({
                 </button>
               ) : null}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       );
     }
 
@@ -1061,10 +1130,20 @@ export function GameView({
         <div className="stage-col">
           {showSleepingScreen ? (
             /* Zero-leakage Night Sleeping Screen */
-            <div className="panel sleep-stage">
-              <div className="sleep-moon">
+            <motion.div
+              key="sleep-stage"
+              className="panel sleep-stage"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35 }}
+            >
+              <motion.div
+                className="sleep-moon"
+                animate={{ y: [0, -7, 0] }}
+                transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+              >
                 <Moon size={36} strokeWidth={1.5} />
-              </div>
+              </motion.div>
               <h2 className="display-font" style={{ fontSize: '2rem', fontWeight: 700 }}>
                 คืนที่ {room.dayNumber} — ทุกคนหลับตา
               </h2>
@@ -1075,10 +1154,23 @@ export function GameView({
                 <Vibrate size={16} />
                 <span>หากถึงตาบทบาทของคุณ โทรศัพท์จะสั่นเตือนและเปิดหน้าคำสั่งส่วนตัวให้ทันที</span>
               </div>
-            </div>
+            </motion.div>
           ) : (
             <>
-              {!isMod ? <div className="panel action-strip">{renderActionStrip()}</div> : null}
+              {!isMod ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${room.phase}_${room.privateData?.visibleNightStep || ''}`}
+                    className="panel action-strip"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {renderActionStrip()}
+                  </motion.div>
+                </AnimatePresence>
+              ) : null}
 
               <div className="seats-grid">
                 {gamePlayers.map((p) => {
@@ -1110,10 +1202,13 @@ export function GameView({
                   }[p.deathCause];
 
                   return (
-                    <div
+                    <motion.div
                       key={p.id}
                       role={targetable ? 'button' : undefined}
                       tabIndex={targetable ? 0 : undefined}
+                      whileHover={targetable ? { y: -3, scale: 1.02 } : undefined}
+                      whileTap={targetable ? { scale: 0.97 } : undefined}
+                      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
                       className={[
                         'seat-card',
                         p.id === room.myId ? 'is-me' : '',
@@ -1134,17 +1229,30 @@ export function GameView({
                       <span className="seat-number-tag tabular">#{padSeat(p.seatNumber)}</span>
 
                       {voteCounts[p.id] ? (
-                        <span className="seat-counter tabular">
+                        <motion.span
+                          key={`v-${voteCounts[p.id]}`}
+                          initial={{ scale: 0.6 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                          className="seat-counter tabular"
+                        >
                           <Vote size={12} />
                           {voteCounts[p.id]}
-                        </span>
+                        </motion.span>
                       ) : null}
 
                       {wolfVotersByTarget[p.id]?.length ? (
-                        <span className="seat-wolf-counter tabular" title={`หมาป่าที่เลือก: ${wolfVotersByTarget[p.id].join(', ')}`}>
+                        <motion.span
+                          key={`w-${wolfVotersByTarget[p.id].length}`}
+                          initial={{ scale: 0.6 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                          className="seat-wolf-counter tabular"
+                          title={`หมาป่าที่เลือก: ${wolfVotersByTarget[p.id].join(', ')}`}
+                        >
                           <WolfCrestIcon size={12} />
                           {wolfVotersByTarget[p.id].length}
-                        </span>
+                        </motion.span>
                       ) : null}
 
                       <div className="seat-figure">
@@ -1227,7 +1335,7 @@ export function GameView({
                         ) : null}
                         {!p.alive && causeLabel ? <span className="tag-pill">{causeLabel}</span> : null}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -1397,7 +1505,7 @@ export function GameView({
         </aside>
       </div>
 
-      {renderOverlay()}
+      <AnimatePresence>{renderOverlay()}</AnimatePresence>
     </section>
   );
 }
